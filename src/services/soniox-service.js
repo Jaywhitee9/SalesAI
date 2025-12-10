@@ -67,19 +67,21 @@ class SonioxService {
 
                 // 1. Emit Final Text (if any)
                 if (finalTokens.length > 0) {
-                    const finalText = finalTokens.map(t => t.text).join("");
+                    let finalText = finalTokens.map(t => t.text).join("");
+                    // Clean <end> tokens and trim
+                    finalText = finalText.replace(/<end>/gi, '').trim();
+
                     if (finalText) {
                         onTranscript(finalText, true);
                     }
                 }
 
                 // 2. Emit Non-Final Text (if any)
-                // Note: Soniox sends the FULL accumulating partial in non-final tokens usually, 
-                // or we might need to accumulate. 
-                // According to docs "Non-final tokens update as more audio arrives; reset them on every response."
-                // So simply joining them is the current partial state.
                 if (nonFinalTokens.length > 0) {
-                    const partialText = nonFinalTokens.map(t => t.text).join("");
+                    let partialText = nonFinalTokens.map(t => t.text).join("");
+                    // Clean <end> tokens and trim
+                    partialText = partialText.replace(/<end>/gi, '').trim();
+
                     if (partialText) {
                         onTranscript(partialText, false);
                     }
