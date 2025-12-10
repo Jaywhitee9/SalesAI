@@ -282,8 +282,26 @@
 
     <script>console.log('Attempting to load Twilio SDK...');</script>
     <script src="https://sdk.twilio.com/js/client/releases/2.11.0/twilio.min.js"
-        onload="console.log('Twilio SDK Loaded Successfully!')"
-        onerror="console.error('Twilio SDK Load Failed (Network/Block).'); document.getElementById('call-status-text').innerText = 'שגיאת רשת: לא ניתן לטעון את Twilio. נסה רשת אחרת.'; document.getElementById('call-status-text').classList.add('text-red-500');"></script>
+        onload="console.log('Twilio SDK Loaded Successfully!')" onerror="handleSdkLoadError()"></script>
+    <script>
+        function handleSdkLoadError() {
+            const statusText = document.getElementById('call-status-text');
+            console.error('Twilio SDK Load Failed (Network/Block).');
+            statusText.innerText = 'שגיאה: טעינת רכיב השיחה נכשלה. נסה לרענן.';
+            statusText.classList.add('text-red-500');
+
+            // Optional: Create a retry button
+            const container = statusText.parentElement;
+            if (!document.getElementById('retry-sdk-btn')) {
+                const retryBtn = document.createElement('button');
+                retryBtn.id = 'retry-sdk-btn';
+                retryBtn.innerText = 'נסה שוב';
+                retryBtn.className = 'mt-2 px-3 py-1 bg-white/10 rounded text-xs hover:bg-white/20 transition';
+                retryBtn.onclick = () => window.location.reload();
+                container.appendChild(retryBtn);
+            }
+        }
+    </script>
     <script>
         // State
         let isCallActive = false;
@@ -363,9 +381,12 @@
             if (statusText.innerText.includes('AdBlock')) return;
 
             if (typeof Twilio === 'undefined') {
-                console.error('Twilio SDK failed to load.');
-                statusText.innerText = "שגיאה: Twilio SDK לא נטען. (אולי נחסם או בעית רשת)";
-                statusText.classList.add('text-red-500');
+                console.warn('Twilio SDK not loaded yet. Waiting or Failed.');
+                // Don't immediately error, give it a moment or let 'onerror' handle it.
+                // Just log it.
+                if (!statusText.innerText.includes('שגיאה')) {
+                    statusText.innerText = "טוען רכיבים...";
+                }
                 return;
             }
             initDevice();

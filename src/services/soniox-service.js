@@ -5,6 +5,9 @@ const SONIOX_URL = 'wss://stt-rt.soniox.com/transcribe-websocket';
 class SonioxService {
     constructor(apiKey) {
         this.apiKey = apiKey;
+        if (!this.apiKey) {
+            console.error('[Soniox] CRITICAL: SONIOX_API_KEY is missing! Transcription will fail.');
+        }
     }
 
     createSession(callSid, track, onTranscript) {

@@ -16,31 +16,48 @@ async function registerTwilioRoutes(fastify) {
 
         reply.type('text/xml');
 
-        // Logic:
-        // 1. <Start> <Stream> -> Forks audio to our AI Engine
-        // 2. <Dial> -> Connects the caller to the destination
+        let response;
+        try {
+            const VoiceResponse = require('twilio').twiml.VoiceResponse;
+            response = new VoiceResponse();
 
-        let dialAction = '';
+            // 1. GREETING (Hebrew)
+            response.say({
+                language: 'he-IL',
+                voice: 'alice' // or a specific neural voice if available
+            }, 'שלום, הגעתם למאמן המכירות. השיחה מוקלטת לצורך שיפור השירות.');
 
-        // If the number looks like a real phone number, dial it (PSTN)
-        // Otherwise, if it's a client name (e.g. 'client:user_123'), dial the client
-        // For simplicity here, if it's NOT our own number, we dial it.
+            // 2. FORK AUDIO to AI (WebSocket)
+            const start = response.start();
+            start.stream({
+                url: `${wsUrl}/twilio-stream`,
+                track: 'both_tracks'
+            });
 
-        if (To && To !== process.env.TWILIO_PHONE_NUMBER) {
-            dialAction = `<Dial callerId="${process.env.TWILIO_PHONE_NUMBER}">${To}</Dial>`;
-        } else {
-            // If incoming TO our number, dial the browser client (e.g. 'support_agent')
-            // For this demo, let's just Say something since we are focusing on outbound
-            dialAction = `<Say>Welcome to Sales Coach AI. Please wait.</Say>`;
-        }
+            // 3. DIAL LOGIC
+            if (To && To !== process.env.TWILIO_PHONE_NUMBER) {
+                // Outbound or forwarding
+                response.dial({
+                    callerId: process.env.TWILIO_PHONE_NUMBER
+                }, To);
+            } else {
+                // Inbound to system
+                response.say('. אנא המתינו לנציג.');
+                // In a real app we might put them in a queue or just keep the stream open
+                response.pause({ length: 10 });
+            }
 
-        return `<?xml version="1.0" encoding="UTF-8"?>
+            console.log('[Twilio] Generated TwiML:', response.toString());
+            return response.toString();
+
+        } catch (error) {
+            console.error('[Twilio] Error generating TwiML:', error);
+            // Fallback TwiML to avoid "Application Error"
+            return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Start>
-    <Stream url="${wsUrl}/twilio-stream" track="both_tracks" />
-  </Start>
-  ${dialAction}
+    <Say>Sorry, an error occurred in the system.</Say>
 </Response>`;
+        }
     };
 
     fastify.post('/voice', voiceHandler);
