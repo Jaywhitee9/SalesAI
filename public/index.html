@@ -159,39 +159,34 @@
             }
         }
 
-        /* SCROLLABLE TRANSCRIPT AREA */
-        .transcript-wrapper {
-            position: relative;
+        /* SCROLLABLE TRANSCRIPT AREA - REFACTORED */
+        #transcript-panel {
             display: flex;
             flex-direction: column;
             height: 100%;
             overflow: hidden;
+            position: relative;
         }
 
-        .transcript-scroll {
+        #transcript-scroll {
             flex: 1;
             overflow-y: auto;
-            padding: 1.5rem;
-            /* p-6 equivalent */
-            scroll-behavior: smooth;
-        }
-
-        .transcript-feed {
+            padding: 12px 16px 80px;
+            /* Extra padding at bottom for input area */
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            /* space-y-4 equivalent (16px) */
-            padding-bottom: 6rem;
-            /* Extra space at bottom */
+            gap: 12px;
+            scroll-behavior: smooth;
         }
 
         .transcript-message {
             display: flex;
             flex-direction: column;
             max-width: 80%;
-            /* Slightly wider than 70% for Hebrew legibility */
             position: relative;
             transition: all 0.2s ease-out;
+            flex-shrink: 0;
+            /* Prevent shrinking */
         }
 
         /* Animations */
@@ -390,14 +385,14 @@
             </div>
 
             <!-- Feed -->
-            <div class="transcript-wrapper">
+            <!-- Feed -->
+            <div id="transcript-panel">
                 <div id="transcript-scroll" class="transcript-scroll">
-                    <div id="transcript-feed" class="transcript-feed">
-                        <div class="text-center py-20 opacity-30" id="empty-state">
-                            <div class="text-6xl mb-4">💬</div>
-                            <div class="text-lg">התמלול יופיע כאן בזמן אמת</div>
-                        </div>
+                    <div class="text-center py-20 opacity-30" id="empty-state">
+                        <div class="text-6xl mb-4">💬</div>
+                        <div class="text-lg">התמלול יופיע כאן בזמן אמת</div>
                     </div>
+                    <!-- Bubbles will be appended here directly -->
                 </div>
             </div>
 
@@ -626,7 +621,7 @@
 
             statusText.innerText = "מתקשר...";
             activeContact.innerText = phone;
-            feed.innerHTML = ''; // Clean feed
+            // feed.innerHTML = ''; // Clean feed - This line is removed as per the refactor, transcript-scroll is now the feed.
 
             try {
                 // Connect via WebRTC (v2)
@@ -725,27 +720,28 @@
         // --- NEW TRANSCRIPT LOGIC ---
 
         function scrollTranscriptToBottom() {
-            const scrollContainer = document.getElementById('transcript-scroll');
-            if (!scrollContainer) return;
-            // Force scroll to bottom using requestAnimationFrame for smoothness after render
+            const el = document.getElementById('transcript-scroll');
+            if (!el) return;
+            // Native smooth scroll behavior from CSS, but force top position
             requestAnimationFrame(() => {
-                scrollContainer.scrollTop = scrollContainer.scrollHeight;
+                el.scrollTop = el.scrollHeight;
             });
         }
 
         function addTranscriptItem(data) {
-            const feed = document.getElementById('transcript-feed');
+            // Target the scroll container directly as the feed
+            const feed = document.getElementById('transcript-scroll');
             const emptyState = document.getElementById('empty-state');
             if (emptyState) emptyState.style.display = 'none';
 
             // Data prep
-            const role = data.role; // 'agent' or 'customer'
+            const role = data.role; // 'agent' or 'customer' or 'note'
             let text = data.text || '';
             const isFinal = data.isFinal !== false;
 
-            // Cleanup just in case backend missed some (though backend should handle it)
+            // Cleanup 
             text = text.replace(/<end>/gi, '').trim();
-            if (!text) return; // Don't render empty bubbles
+            if (!text) return;
 
             // Check for existing partial bubble to update
             const lastItem = feed.lastElementChild;
@@ -755,12 +751,11 @@
             if (lastWasPartial && lastWasSameSpeaker) {
                 // UPDATE existing bubble
                 const bubble = lastItem.querySelector('.transcript-bubble');
-                bubble.innerText = text;
+                if (bubble) bubble.innerText = text;
 
                 if (isFinal) {
                     lastItem.dataset.partial = 'false';
-                    bubble.classList.remove('partial');
-                    // Remove typing indicator logic if any (we used CSS classes)
+                    if (bubble) bubble.classList.remove('partial');
                     const typingEl = lastItem.querySelector('.typing-indicator');
                     if (typingEl) typingEl.remove();
                 }
@@ -771,23 +766,30 @@
 
             // CREATE new bubble
             const messageEl = document.createElement('div');
-            messageEl.classList.add('transcript-message', role, 'new');
+            // Add specific classes
+            messageEl.className = 'transcript-message';
+            messageEl.classList.add(role);
+            if (!isFinal) messageEl.classList.add('new');
+
             messageEl.dataset.speaker = role;
             messageEl.dataset.partial = (!isFinal).toString();
 
-            // Label
-            const labelEl = document.createElement('div');
-            labelEl.classList.add('transcript-label');
+            // Label (skip for notes)
+            if (role !== 'note') {
+                const labelEl = document.createElement('div');
+                labelEl.classList.add('transcript-label');
 
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = (role === 'agent') ? 'נציג' : 'לקוח';
-            labelEl.appendChild(nameSpan);
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = (role === 'agent') ? 'נציג' : 'לקוח';
+                labelEl.appendChild(nameSpan);
 
-            if (!isFinal) {
-                const typingSpan = document.createElement('span');
-                typingSpan.classList.add('typing-indicator', 'text-[10px]', 'animate-pulse', 'opacity-70');
-                typingSpan.innerText = 'מקליד...';
-                labelEl.appendChild(typingSpan);
+                if (!isFinal) {
+                    const typingSpan = document.createElement('span');
+                    typingSpan.classList.add('typing-indicator', 'text-[10px]', 'animate-pulse', 'opacity-70');
+                    typingSpan.innerText = 'מקליד...';
+                    labelEl.appendChild(typingSpan);
+                }
+                messageEl.appendChild(labelEl);
             }
 
             // Bubble
@@ -796,7 +798,6 @@
             if (!isFinal) bubbleEl.classList.add('partial');
             bubbleEl.innerText = text;
 
-            messageEl.appendChild(labelEl);
             messageEl.appendChild(bubbleEl);
 
             feed.appendChild(messageEl);
