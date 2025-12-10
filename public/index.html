@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Coach - מצב מיקוד</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-app: #09090b;
+            --bg-panel: #18181b;
+            --bg-card: #27272a;
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+            --accent: #3b82f6;
+            /* Blue */
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --border: #3f3f46;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        header {
+            height: 60px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .call-status-bar {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 100px;
+            background: #27272a;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge.live {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* MAIN LAYOUT */
+        .workspace {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            /* Coach (Right), Transcript (Left) in RTL */
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* TRANSCRIPT (Left in RTL) */
+        .transcript-panel {
+            padding: 24px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 1rem;
+            line-height: 1.5;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.agent {
+            align-self: flex-start;
+            background: var(--bg-card);
+            border-top-right-radius: 4px;
+            color: var(--text-muted);
+        }
+
+        .message.customer {
+            align-self: flex-end;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-top-left-radius: 4px;
+            color: var(--text-main);
+        }
+
+        .message-label {
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            opacity: 0.7;
+            font-weight: 600;
+        }
+
+        .ai-insight-tag {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: rgba(234, 179, 8, 0.2);
+            color: #fde047;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* COACH (Right in RTL) */
+        .coach-panel {
+            background: var(--bg-panel);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        /* 1. Radar Gauge */
+        .sales-gauge {
+            text-align: center;
+        }
+
+        .gauge-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 8px solid var(--bg-card);
+            border-top-color: var(--warning);
+            /* Dynamic color */
+            margin: 0 auto 16px;
+            display: grid;
+            place-items: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--warning);
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
+            transition: all 0.5s ease;
+        }
+
+        .gauge-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 2. Primary Tip Card */
+        .tip-card {
+            background: linear-gradient(145deg, #1e1e24, #27272a);
+            border: 1px solid var(--accent-glow);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+        }
+
+        .tip-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .tip-content {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .tip-action {
+            background: var(--accent);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tip-action:hover {
+            background: #2563eb;
+        }
+
+        /* 3. Simple Checklist */
+        .checklist {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .checklist-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            margin-bottom: 8px;
+            opacity: 0.6;
+            transition: all 0.3s;
+        }
+
+        .step.active {
+            opacity: 1;
+            border-left: 4px solid var(--accent);
+            background: #2f2f35;
+        }
+
+        .step.done {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+
+        .circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-muted);
+            border-radius: 50%;
+        }
+
+        .step.active .circle {
+            border-color: var(--accent);
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .step.done .circle {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        /* DIALER MODAL (Overlay) */
+        .dialer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: grid;
+            place-items: center;
+            z-index: 100;
+        }
+
+        .dialer-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .dialer-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .dial-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .dial-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- DIALER OVERLAY -->
+    <div class="dialer-overlay" id="dialer-screen">
+        <div class="dialer-box">
+            <h2 style="margin-bottom: 24px;">חייגן חכם</h2>
+            <input type="tel" id="phone-input" class="dialer-input" placeholder="050-000-0000">
+            <button class="dial-btn" onclick="startCall()">📞 התחל שיחה</button>
+            <div style="margin-top: 16px; font-size: 0.9rem; color: var(--text-muted);">המערכת תנתח את השיחה בזמן אמת
+            </div>
+        </div>
+    </div>
+
+    <!-- APP HEADER -->
+    <header>
+        <div class="logo">Sales<span>Coach</span></div>
+        <div class="call-status-bar hidden" id="live-header">
+            <div id="contact-display">050-123-4567</div>
+            <div class="status-badge live">
+                <div class="pulse"></div> בשיחה (LIVE)
+            </div>
+            <div id="timer" style="font-weight: 600;">00:00</div>
+            <button onclick="hangup()"
+                style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 16px; border-radius: 8px; cursor: pointer;">סיים
+                שיחה</button>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <div class="workspace">
+
+        <!-- TRANSCRIPT PANEL -->
+        <div class="transcript-panel" id="transcript">
+            <!-- Messages will appear here -->
+            <div style="text-align: center; color: var(--text-muted); margin-top: 40px;">
+                התמלול יופיע כאן ברגע שהשיחה תתחיל...
+            </div>
+        </div>
+
+        <!-- AI COACH PANEL -->
+        <aside class="coach-panel">
+
+            <!-- 1. GAUGE -->
+            <div class="sales-gauge">
+                <div class="gauge-circle" id="lead-score">50</div>
+                <div class="gauge-label">סיכויי הצלחה</div>
+            </div>
+
+            <!-- 2. MAIN TIP -->
+            <div class="tip-card" id="ai-card">
+                <div class="tip-header">💡 המלצה חכמה</div>
+                <div class="tip-content">ממתין לתחילת שיחה...</div>
+                <div class="tip-action">המתן לניתוח ראשוני</div>
+            </div>
+
+            <!-- 3. CHECKLIST -->
+            <div class="checklist">
+                <div class="checklist-title">צעדים בשיחה</div>
+                <div class="step active" id="step-1">
+                    <div class="circle"></div>
+                    <div>פתיחה וחיבור אישי</div>
+                </div>
+                <div class="step" id="step-2">
+                    <div class="circle"></div>
+                    <div>בירור צרכים (ה-למה?)</div>
+                </div>
+                <div class="step" id="step-3">
+                    <div class="circle"></div>
+                    <div>הצגת הפתרון</div>
+                </div>
+                <div class="step" id="step-4">
+                    <div class="circle"></div>
+                    <div>טיפול בהתנגדויות</div>
+                </div>
+                <div class="step" id="step-5">
+                    <div class="circle"></div>
+                    <div>סגירה / הנעה לפעולה</div>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+    <script>
+        let callTimer = null;
+        let seconds = 0;
+        let ws = null;
+
+        async function startCall() {
+            const phone = document.getElementById('phone-input').value;
+            if (!phone) return alert('נא להכניס מספר');
+
+            // UI Updates
+            document.getElementById('dialer-screen').classList.add('hidden');
+            document.getElementById('live-header').classList.remove('hidden');
+            document.getElementById('contact-display').innerText = phone;
+            document.getElementById('transcript').innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 0.9rem;">מתקשר...</div>';
+
+            // Start Timer
+            seconds = 0;
+            callTimer = setInterval(() => {
+                seconds++;
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer').innerText = `${m}:${s}`;
+            }, 1000);
+
+            // Backend Call
+            try {
+                const res = await fetch('/api/make-call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to: phone })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    window.currentCallSid = data.callSid;
+                    connectWS(data.callSid);
+                    updateTip("השיחה מתחילה...", "הקשב ללקוח והצג את עצמך בביטחון.");
+                } else {
+                    alert('שגיאה בחיוג');
+                    resetUI();
+                }
+            } catch (e) {
+                console.error(e);
+                alert('תקלה בהתקשרות');
+                resetUI();
+            }
+        }
+
+        async function hangup() {
+            if (window.currentCallSid) {
+                await fetch('/api/end-call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ callSid: window.currentCallSid })
+                });
+            }
+            resetUI();
+            // Go to summary (mock)
+            window.location.href = '/summary.html';
+        }
+
+        function resetUI() {
+            clearInterval(callTimer);
+            document.getElementById('dialer-screen').classList.remove('hidden');
+            document.getElementById('live-header').classList.add('hidden');
+            if (ws) ws.close();
+        }
+
+        function connectWS(sid) {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // Note: I'm relying on host being correct (localhost:3000 or ngrok public url)
+            // If user accesses via ngrok, host is ngrok. Safe.
+            ws = new WebSocket(`${proto}//${location.host}/ws/coach?callSid=${sid}`);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'transcript') addMessage(data);
+                if (data.type === 'coaching') updateTip('טיפ חדש!', data.message, data.suggested_reply);
+            };
+        }
+
+        function addMessage(data) {
+            const div = document.createElement('div');
+            div.className = `message ${data.role === 'agent' ? 'agent' : 'customer'}`;
+
+            let html = `<div class="message-label">${data.role === 'agent' ? 'אתה' : 'לקוח'}</div>`;
+            html += `<div>${data.text}</div>`;
+
+            // Simulating AI insight detection (Mock logic for UI demo)
+            if (data.text.includes('כסף') || data.text.includes('יקר')) {
+                html += `<div class="ai-insight-tag">💰 זוהתה רגישות למחיר</div>`;
+                updateScore(40); // Drop score
+            }
+            if (data.text.includes('מעניין')) {
+                updateScore(75); // Increase score
+            }
+
+            div.innerHTML = html;
+            document.getElementById('transcript').appendChild(div);
+            // Auto scroll? 
+            // panel.scrollTop = panel.scrollHeight;
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateTip(title, text, suggested) {
+            const card = document.getElementById('ai-card');
+            let html = '<div class="tip-header">💡 ' + title + '</div>' +
+                '<div class="tip-content">' + text + '</div>';
+
+            if (suggested) {
+                html += '<div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:8px; margin-bottom:12px; font-style:italic; font-size:0.9rem;">"' + suggested + '"</div>';
+            }
+
+            html += '<div class="tip-action" onclick="this.style.background=\'#22c55e\'">✓ בוצע</div>';
+            card.innerHTML = html;
+
+            // Simple animation
+            card.style.transform = "scale(1.05)";
+            setTimeout(() => card.style.transform = "scale(1)", 200);
+        }
+
+        function updateScore(score) {
+            const el = document.getElementById('lead-score');
+            el.innerText = score;
+            if (score > 70) el.style.color = '#22c55e'; // Green
+            else if (score < 50) el.style.color = '#ef4444'; // Red
+            else el.style.color = '#eab308'; // Yellow
+
+            document.querySelector('.gauge-circle').style.borderColor = el.style.color;
+        }
+
+        // --- DEV SIMULATION ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'S' && e.shiftKey) {
+                // Mock flow
+                addMessage({ role: 'agent', text: 'שלום, מדבר דניאל.' });
+                setTimeout(() => addMessage({ role: 'customer', text: 'שלום, כמה זה עולה?' }), 2000);
+                setTimeout(() => updateTip('טיפול בהתנגדות', 'אל תענה ישר על המחיר. שאל על הצרכים קודם.', 'האם אנחנו יכולים לדבר רגע על מה שחשוב לכם במוצר לפני שמדברים על עלויות?'), 2500);
+            }
+        });
+    </script>
+</body>
+
+</html>
