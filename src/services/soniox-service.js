@@ -55,6 +55,7 @@ class SonioxService {
 
         ws.on('error', (err) => {
             console.error(`[Soniox] Error for ${callSid} (${track}):`, err.message);
+            // Don't throw, just log. The session might be dead but keep the stream alive.
         });
 
         ws.on('close', () => {

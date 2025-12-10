@@ -569,6 +569,7 @@
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
+                console.log('[WS] Received:', data.type, data);
                 if (data.type === 'transcript') addTranscriptItem(data);
                 if (data.type === 'coaching') updateInsight(data);
             };
