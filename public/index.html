@@ -31,65 +31,6 @@
                     }
                 }
             }
-        }
-
-        // This function is assumed to be the target for the update based on the instruction.
-        // The provided code snippet seems to be part of a larger function that processes call events.
-        // For the purpose of this edit, it's placed as a standalone function,
-        // but in a real application, it would likely be integrated into an existing event handler.
-        async function addTranscriptItem(callSid, role, text, isFinal) {
-            // Placeholder for call and account objects, which would be available in a real context
-            const call = {}; // Assume call object is available
-            const account = { config: {} }; // Assume account object is available
-            const recentContext = {}; // Assume recentContext is available
-
-            // The provided code snippet starts here
-            const advice = await CoachingEngine.generateCoaching(call, account.config, recentContext);
-
-            if (advice) {
-                // Update State
-                call.lastCoachingTime = Date.now();
-                call.coachingHistory.push({
-                    type: advice.type,
-                    message: advice.message,
-                    timestamp: Date.now()
-                });
-
-                // Broadcast coaching to UI (Standardized Contract)
-                CallManager.broadcastToFrontend(callSid, {
-                    type: 'coaching',
-                    severity: advice.severity || 'info', // Default if missing
-                    role: 'system', // It's from the system
-                    message: advice.message,
-                    suggested_reply: advice.suggested_reply
-                });
-            } else {
-                // Broadcast PARTIAL or Agent transcripts just for display
-                CallManager.broadcastToFrontend(callSid, {
-                    type: 'transcript',
-                    role: role,
-                    text: text,
-                    isFinal: isFinal,
-                    timestamp: Date.now()
-                });
-            }
-            // The provided code snippet ends here
-        }
-
-        // Placeholder for CoachingEngine and CallManager, which would be defined elsewhere
-        const CoachingEngine = {
-            generateCoaching: async (call, config, context) => {
-                // Simulate AI response
-                return null; // Or { type: 'tip', message: 'Speak clearly!', severity: 'info' }
-            }
-        };
-
-        const CallManager = {
-            broadcastToFrontend: (callSid, data) => {
-                console.log(`Broadcasting to frontend for ${callSid}:`, data);
-                // In a real app, this would send data to the UI
-            }
-        };
     </script>
     <style>
         body {
@@ -523,7 +464,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.11.1/dist/twilio.min.js"
         onload="console.log('Twilio Voice SDK Loaded')" onerror="handleSdkLoadError()"></script>
     <script>
-        function handleSdkLoadError() {
+            function handleSdkLoadError() {
             const statusText = document.getElementById('call-status-text');
             console.error('Twilio SDK Load Failed (Network/Block).');
             statusText.innerText = 'שגיאה: טעינת רכיב השיחה נכשלה. נסה לרענן.';
