@@ -280,8 +280,10 @@
 
     </main>
 
+    <script>console.log('Attempting to load Twilio SDK...');</script>
     <script src="https://sdk.twilio.com/js/client/releases/2.11.0/twilio.min.js"
-        onerror="document.getElementById('call-status-text').innerText = 'שגיאה: נחסם ע״י חוסם פרסומות (AdBlock). בבקשה בטל אותו.'; document.getElementById('call-status-text').classList.add('text-red-500');"></script>
+        onload="console.log('Twilio SDK Loaded Successfully!')"
+        onerror="console.error('Twilio SDK Load Failed (Network/Block).'); document.getElementById('call-status-text').innerText = 'שגיאת רשת: לא ניתן לטעון את Twilio. נסה רשת אחרת.'; document.getElementById('call-status-text').classList.add('text-red-500');"></script>
     <script>
         // State
         let isCallActive = false;
