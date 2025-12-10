@@ -357,9 +357,12 @@
 
         // --- INIT DEVICE ON LOAD ---
         window.addEventListener('load', () => {
+            // If we already detected a block via onerror (text contains AdBlock), don't overwrite it
+            if (statusText.innerText.includes('AdBlock')) return;
+
             if (typeof Twilio === 'undefined') {
                 console.error('Twilio SDK failed to load.');
-                statusText.innerText = "שגיאה: Twilio SDK לא נטען. בדוק חיבור לרשת.";
+                statusText.innerText = "שגיאה: Twilio SDK לא נטען. (אולי נחסם או בעית רשת)";
                 statusText.classList.add('text-red-500');
                 return;
             }
