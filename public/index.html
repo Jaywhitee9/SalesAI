@@ -301,7 +301,8 @@
 <body class="flex flex-col">
 
     <!-- Navbar -->
-    <nav class="h-16 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center justify-between px-6 z-50">
+    <nav class="h-16 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center justify-between px-6 relative"
+        style="z-index: 100;">
         <div class="flex items-center gap-3">
             <div
                 class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-lg">
@@ -314,8 +315,9 @@
                 <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                 <span>מחובר (Online)</span>
             </div>
-            <button id="btn-settings" onclick="openHealthCheck()"
-                class="w-8 h-8 rounded-full bg-surfaceHighlight flex items-center justify-center hover:bg-white/10 transition">⚙️</button>
+            <button id="btn-settings" onclick="openHealthCheck()" type="button"
+                class="w-8 h-8 rounded-full bg-surfaceHighlight flex items-center justify-center hover:bg-white/10 transition cursor-pointer relative"
+                style="z-index: 101;">⚙️</button>
         </div>
     </nav>
 
