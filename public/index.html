@@ -727,6 +727,11 @@
                 console.log('[WS] Received:', data.type, data);
                 if (data.type === 'transcript') addTranscriptItem(data);
                 if (data.type === 'coaching') updateInsight(data);
+                if (data.type === 'call_summary') {
+                    console.log('Call Summary Received:', data.data);
+                    sessionStorage.setItem('lastCallSummary', JSON.stringify(data.data));
+                    window.location.href = '/summary.html';
+                }
             };
         }
 

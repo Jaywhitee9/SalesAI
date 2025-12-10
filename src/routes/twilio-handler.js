@@ -203,7 +203,30 @@ async function registerTwilioRoutes(fastify) {
 
                 } else if (data.event === 'stop') {
                     console.log(`[Twilio] Stream stopped for ${callSid}`);
-                    CallManager.cleanupCall(callSid);
+
+                    if (callSid) {
+                        const call = CallManager.getCall(callSid);
+                        if (call) {
+                            // Generate Summary logic
+                            console.log(`[Twilio] Generating summary for ${callSid}...`);
+                            try {
+                                const summary = await CoachingEngine.generateSummary(call);
+                                if (summary) {
+                                    CallManager.broadcastToFrontend(callSid, {
+                                        type: 'call_summary',
+                                        data: summary
+                                    });
+                                }
+                            } catch (err) {
+                                console.error('[Twilio] Error generating summary:', err);
+                            }
+
+                            // Give a small buffer for the WS message to send before closing
+                            setTimeout(() => CallManager.cleanupCall(callSid), 1000);
+                        } else {
+                            CallManager.cleanupCall(callSid);
+                        }
+                    }
                 }
             } catch (e) {
                 console.error('[Twilio] Error processing message:', e);
