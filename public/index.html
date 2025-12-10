@@ -376,20 +376,38 @@
 
         // --- INIT DEVICE ON LOAD ---
         window.addEventListener('load', () => {
-            // If we already detected a block via onerror (text contains AdBlock), don't overwrite it
+            // Check if we are blocked
             if (statusText.innerText.includes('AdBlock')) return;
 
-            if (typeof Twilio === 'undefined') {
-                console.warn('Twilio SDK not loaded yet. Waiting or Failed.');
-                // Don't immediately error, give it a moment or let 'onerror' handle it.
-                // Just log it.
-                if (!statusText.innerText.includes('שגיאה')) {
-                    statusText.innerText = "טוען רכיבים...";
-                }
+            // Start polling for the SDK
+            waitForTwilio();
+        });
+
+        function waitForTwilio(attempts = 0) {
+            if (typeof Twilio !== 'undefined') {
+                console.log('Twilio global found. Initializing...');
+                initDevice();
                 return;
             }
-            initDevice();
-        });
+
+            if (attempts > 50) { // 5 seconds (50 * 100ms)
+                console.error('Twilio SDK load timed out.');
+                statusText.innerText = "שגיאה: טעינת הרכיבים איטית מדי. נסה לרענן.";
+                statusText.classList.add('text-red-500');
+                // Allow a manual retry button here too if needed
+                handleSdkLoadError(); // re-use error handler to show retry
+                return;
+            }
+
+            if (attempts % 10 === 0) {
+                // Update UI every second
+                if (!statusText.innerText.includes('שגיאה')) {
+                    statusText.innerText = `טוען רכיבים... (${Math.floor(attempts / 10)})`;
+                }
+            }
+
+            setTimeout(() => waitForTwilio(attempts + 1), 100);
+        }
 
         // Functions
         async function startCall() {
