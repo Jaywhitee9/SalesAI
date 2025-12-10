@@ -35,11 +35,28 @@ async function registerTwilioRoutes(fastify) {
             });
 
             // 3. DIAL LOGIC
-            if (To && To !== process.env.TWILIO_PHONE_NUMBER) {
+            // Normalize "To" number to E.164 if dealing with Israeli numbers
+            let targetNumber = To;
+            if (targetNumber) {
+                // Remove non-digits
+                let cleanNumber = targetNumber.replace(/\D/g, '');
+                // If starts with 0 and is long enough, assume IL local
+                if (targetNumber.startsWith('0') && cleanNumber.length >= 9) {
+                    targetNumber = '+972' + cleanNumber.substring(1);
+                } else if (!targetNumber.startsWith('+') && cleanNumber.length >= 7) {
+                    // Try to be smart? Or just let it fail if not +
+                    // Let's assume input might be 501234567 -> +972501234567 if they omitted 0? 
+                    // Safer to just handle the standard '05...' case.
+                }
+            }
+
+            if (targetNumber && targetNumber !== process.env.TWILIO_PHONE_NUMBER) {
                 // Outbound or forwarding
-                response.dial({
-                    callerId: process.env.TWILIO_PHONE_NUMBER
-                }, To);
+                const dial = response.dial({
+                    callerId: process.env.TWILIO_PHONE_NUMBER,
+                    answerOnBridge: true
+                });
+                dial.number(targetNumber);
             } else {
                 // Inbound to system
                 response.say('. אנא המתינו לנציג.');
