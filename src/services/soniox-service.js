@@ -26,8 +26,9 @@ class SonioxService {
             sample_rate: 8000,
             num_channels: 1,
 
-            // Languages: Hebrew + English
-            language_hints: ["he", "en"],
+            // Languages: Hebrew only (Strict)
+            // We remove 'en' to prevent detecting English/Arabic false positives
+            language_hints: ["he"],
             enable_language_identification: true,
 
             // Features

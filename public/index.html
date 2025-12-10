@@ -595,8 +595,9 @@
                     lastItem.dataset.partial = 'false';
                     lastItem.classList.remove('opacity-70');
                     // Pulse effect for finalization?
+                    scrollToBottom();
                 }
-                feed.scrollTop = feed.scrollHeight;
+                scrollToBottom();
                 return;
             }
 
