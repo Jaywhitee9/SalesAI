@@ -260,7 +260,7 @@ async function registerTwilioRoutes(fastify) {
                     // Update State
                     call.lastCoachingTime = Date.now();
                     call.coachingHistory.push({
-                        type: advice.type,
+                        type: advice.type || 'coaching',
                         message: advice.message,
                         timestamp: Date.now()
                     });
@@ -268,8 +268,12 @@ async function registerTwilioRoutes(fastify) {
                     // Broadcast coaching to UI (Standardized Contract)
                     CallManager.broadcastToFrontend(callSid, {
                         type: 'coaching',
-                        severity: advice.severity || 'info', // Default if missing
-                        role: 'system', // It's from the system
+                        severity: advice.severity || 'info',
+                        role: 'system',
+
+                        // New fields from Hebrew Engine
+                        stage: advice.stage,
+                        score: advice.score,
                         message: advice.message,
                         suggested_reply: advice.suggested_reply
                     });
