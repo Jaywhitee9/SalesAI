@@ -14,13 +14,15 @@ class SonioxService {
         // track is 'inbound' (customer) or 'outbound' (agent)
 
         // Config as requested
+        const model = process.env.SONIOX_MODEL || "en_v2_lowlatency";
+
         const config = {
             api_key: this.apiKey,
             audio_format: "mulaw",
             sample_rate: 8000,
             num_channels: 1,
             include_non_final: true,
-            model: "en_v2" // Required by Soniox. Using English to verify pipeline first.
+            model: model
         };
 
         const ws = new WebSocket(SONIOX_URL);
@@ -31,7 +33,7 @@ class SonioxService {
         // We will trust the `is_final` flag and the text provided.
 
         ws.on('open', () => {
-            console.log(`[Soniox] Connected for ${callSid} (${track})`);
+            console.log(`[Soniox] Opening stream for ${callSid} (${track}) using model: ${model}`);
             // Send config immediately
             ws.send(JSON.stringify(config));
         });

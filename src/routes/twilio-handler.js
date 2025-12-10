@@ -178,9 +178,9 @@ async function registerTwilioRoutes(fastify) {
                         }
 
                         // --- DEBUG: DUMMY MODE (BYPASS SONIOX) ---
-                        // Send a fake transcript every 20 frames to prove UI connection
+                        // Only active if DEBUG_TRANSCRIPTS is 'true'
 
-                        if (call.frameCounters[track] % 20 === 0) {
+                        if (process.env.DEBUG_TRANSCRIPTS === 'true' && call.frameCounters[track] % 50 === 0) {
                             const debugRole = (track === 'inbound') ? inboundSpeaker : outboundSpeaker;
                             console.log(`[DEBUG] Injecting dummy transcript for ${debugRole}`);
 
