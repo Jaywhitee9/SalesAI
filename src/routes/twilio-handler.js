@@ -6,7 +6,6 @@ const TenantStore = require('../services/tenant-store');
 async function registerTwilioRoutes(fastify) {
 
     // 1. HTTP Endpoint for Inbound/Outbound Calls
-    // 1. HTTP Endpoint for Inbound/Outbound Calls
     const voiceHandler = async (request, reply) => {
         const baseUrl = process.env.PUBLIC_URL || `https://${request.headers.host}`;
         const wsUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://');
@@ -16,6 +15,7 @@ async function registerTwilioRoutes(fastify) {
         // TwiML: Connect to Media Stream
         return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
+  <Say language="he-IL">שלום, מתחבר למערכת</Say>
   <Connect>
     <Stream url="${wsUrl}/twilio-stream" track="both_tracks" />
   </Connect>
