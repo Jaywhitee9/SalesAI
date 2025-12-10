@@ -16,13 +16,23 @@ class SonioxService {
         // Config as requested
         const model = process.env.SONIOX_MODEL || "en_v2_lowlatency";
 
+        // Config matching Soniox v3 Real-time docs
         const config = {
             api_key: this.apiKey,
+            model: "stt-rt-v3",
+
+            // Audio format
             audio_format: "mulaw",
             sample_rate: 8000,
             num_channels: 1,
-            include_non_final: true,
-            model: model
+
+            // Languages: Hebrew + English
+            language_hints: ["he", "en"],
+            enable_language_identification: true,
+
+            // Features
+            enable_endpoint_detection: true,
+            enable_speaker_diarization: false // We handle speaker separation via Twilio tracks (agent vs customer stream)
         };
 
         const ws = new WebSocket(SONIOX_URL);
@@ -41,16 +51,39 @@ class SonioxService {
         ws.on('message', (data) => {
             try {
                 const response = JSON.parse(data);
-                // Valid response structure typically has 'text' and 'is_final' (or 'type': 'partial'/'final')
-                // Adhere to Soniox API docs structure.
 
-                // For Soniox, standard response: { text: "...", is_final: boolean, ... }
-                console.log('[Soniox] Raw:', JSON.stringify(response).substring(0, 200));
-                console.log('[Soniox] Response:', JSON.stringify(response));
-
-                if (response.text) {
-                    onTranscript(response.text, response.is_final);
+                // Error handling
+                if (response.error_code) {
+                    console.error(`[Soniox] API Error for ${callSid} (${track}): ${response.error_code} - ${response.error_message}`);
+                    return;
                 }
+
+                if (!response.tokens) return;
+
+                // Separate Final and Non-Final tokens
+                const finalTokens = response.tokens.filter(t => t.is_final);
+                const nonFinalTokens = response.tokens.filter(t => !t.is_final);
+
+                // 1. Emit Final Text (if any)
+                if (finalTokens.length > 0) {
+                    const finalText = finalTokens.map(t => t.text).join("");
+                    if (finalText) {
+                        onTranscript(finalText, true);
+                    }
+                }
+
+                // 2. Emit Non-Final Text (if any)
+                // Note: Soniox sends the FULL accumulating partial in non-final tokens usually, 
+                // or we might need to accumulate. 
+                // According to docs "Non-final tokens update as more audio arrives; reset them on every response."
+                // So simply joining them is the current partial state.
+                if (nonFinalTokens.length > 0) {
+                    const partialText = nonFinalTokens.map(t => t.text).join("");
+                    if (partialText) {
+                        onTranscript(partialText, false);
+                    }
+                }
+
             } catch (e) {
                 console.error(`[Soniox] Error parsing message for ${callSid}:`, e);
             }

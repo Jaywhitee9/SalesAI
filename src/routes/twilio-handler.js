@@ -177,24 +177,7 @@ async function registerTwilioRoutes(fastify) {
                             console.log(`[Twilio] Stream active: ${call.frameCounters[track]} frames from ${track}`);
                         }
 
-                        // --- DEBUG: DUMMY MODE (BYPASS SONIOX) ---
-                        // Only active if DEBUG_TRANSCRIPTS is 'true'
-
-                        if (process.env.DEBUG_TRANSCRIPTS === 'true' && call.frameCounters[track] % 50 === 0) {
-                            const debugRole = (track === 'inbound') ? inboundSpeaker : outboundSpeaker;
-                            console.log(`[DEBUG] Injecting dummy transcript for ${debugRole}`);
-
-                            // Emit directly to frontend
-                            CallManager.broadcastToFrontend(callSid, {
-                                type: 'transcript',
-                                role: debugRole,
-                                text: `[DEBUG] Audio received from ${debugRole} (${call.frameCounters[track]})`,
-                                isFinal: true,
-                                timestamp: Date.now()
-                            });
-                        }
-
-                        // ----------------------------------------
+                        // --- DUMMY MODE REMOVED ---
 
                         // We map the Twilio track to the correct Soniox Session
                         // Ensure sessions exist for roles
