@@ -280,7 +280,8 @@
 
     </main>
 
-    <script src="https://sdk.twilio.com/js/client/releases/2.11.0/twilio.min.js"></script>
+    <script src="https://sdk.twilio.com/js/client/releases/2.11.0/twilio.min.js"
+        onerror="document.getElementById('call-status-text').innerText = 'שגיאה: נחסם ע״י חוסם פרסומות (AdBlock). בבקשה בטל אותו.'; document.getElementById('call-status-text').classList.add('text-red-500');"></script>
     <script>
         // State
         let isCallActive = false;
