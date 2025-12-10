@@ -173,14 +173,14 @@ async function registerTwilioRoutes(fastify) {
                         if (!call.frameCounters) call.frameCounters = { inbound: 0, outbound: 0 };
                         call.frameCounters[track]++;
 
-                        if (call.frameCounters[track] % 100 === 0) {
+                        if (call.frameCounters[track] % 20 === 0) {
                             console.log(`[Twilio] Stream active: ${call.frameCounters[track]} frames from ${track}`);
                         }
 
                         // --- DEBUG: DUMMY MODE (BYPASS SONIOX) ---
-                        // Send a fake transcript every 50 frames to prove UI connection
+                        // Send a fake transcript every 20 frames to prove UI connection
 
-                        if (call.frameCounters[track] % 50 === 0) {
+                        if (call.frameCounters[track] % 20 === 0) {
                             const debugRole = (track === 'inbound') ? inboundSpeaker : outboundSpeaker;
                             console.log(`[DEBUG] Injecting dummy transcript for ${debugRole}`);
 

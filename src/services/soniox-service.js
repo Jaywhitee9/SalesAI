@@ -19,7 +19,8 @@ class SonioxService {
             audio_format: "mulaw",
             sample_rate: 8000,
             num_channels: 1,
-            include_non_final: true, // We need partials for low latency UI
+            include_non_final: true,
+            model: "en_v2" // Required by Soniox. Using English to verify pipeline first.
         };
 
         const ws = new WebSocket(SONIOX_URL);
