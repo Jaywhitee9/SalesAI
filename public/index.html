@@ -281,8 +281,9 @@
     </main>
 
     <script>console.log('Attempting to load Twilio SDK...');</script>
-    <script src="https://sdk.twilio.com/js/client/releases/2.11.0/twilio.min.js"
-        onload="console.log('Twilio SDK Loaded Successfully!')" onerror="handleSdkLoadError()"></script>
+    <!-- Twilio Voice SDK v2.11.1 -->
+    <script src="https://sdk.twilio.com/js/voice/releases/2.11.1/twilio.min.js"
+        onload="console.log('Twilio Voice SDK Loaded')" onerror="handleSdkLoadError()"></script>
     <script>
         function handleSdkLoadError() {
             const statusText = document.getElementById('call-status-text');
@@ -332,41 +333,41 @@
                 const data = await res.json();
                 console.log('Token received:', data);
 
-                device = new Twilio.Device(data.token, {
+                // Twilio Voice SDK v2 Initialization
+                // Note: The global might be Twilio.Device or Twilio.Voice.Device depending on the bundle.
+                // The CDN usually exposes Twilio.Device directly or via Twilio.Voice.
+                const Device = Twilio.Device;
+
+                device = new Device(data.token, {
                     codecPreferences: ['opus', 'pcmu'],
-                    fakeLocalDTMF: true,
-                    enableRingingState: true,
-                    debug: true
+                    // fakeLocalDTMF, enableRingingState are v1 legacy options - removed
+                    debug: true,
+                    // v2 specific options can go here
                 });
 
-                device.on('ready', function (device) {
-                    console.log('Twilio.Device Ready!');
-                    statusText.innerText = "מוכן לשיחה (Softphone Connected)";
+                // Register the device for incoming calls
+                device.register();
+
+                device.on('registered', function () {
+                    console.log('Twilio.Device Ready (Registered)!');
+                    statusText.innerText = "מוכן לשיחה (Voice SDK v2)";
+                    statusText.classList.remove('text-red-500');
                     statusText.classList.add('text-green-400');
                 });
 
                 device.on('error', function (error) {
                     console.error('Twilio.Device Error:', error);
+                    // Ignore some harmless errors or handle them
+                    if (error.code === 31205) return; // Keep alive error, ignore
                     statusText.innerText = "שגיאה: " + error.message;
                     statusText.classList.add('text-red-500');
                 });
 
-                device.on('connect', function (conn) {
-                    console.log('Successfully established call!');
-                    statusText.innerText = "בשיחה";
-                    activeConnection = conn;
-                    callSid = conn.parameters.CallSid;
-                    setCallState(true);
-                    startTimer();
-                    connectWS(callSid);
-                });
+                // In v2, 'connect' event on device is for unexpected connections? 
+                // Usually we handle outgoing via the promise, and incoming via 'incoming' event.
+                // We'll leave this empty or use it for debugging.
 
-                device.on('disconnect', function (conn) {
-                    console.log('Call ended.');
-                    statusText.innerText = "השיחה הסתיימה";
-                    activeConnection = null;
-                    hangup();
-                });
+            } catch (err) {
 
             } catch (err) {
                 console.error('CRITICAL Error during Device init:', err);
@@ -411,18 +412,42 @@
             feed.innerHTML = ''; // Clean feed
 
             try {
-                // Connect via WebRTC
-                // We pass the phone number as a parameter to the TwiML app
+                // Connect via WebRTC (v2)
+                // device.connect() returns a Promise resolving to a Call object
                 const params = {
                     To: phone
                 };
 
                 console.log('Dialing ' + phone + '...');
-                device.connect(params);
+                const call = await device.connect({ params: params });
+
+                // Setup Call Listeners
+                call.on('accept', () => {
+                    console.log('Call accepted');
+                    statusText.innerText = "בשיחה";
+                    activeConnection = call;
+                    // v2: call.parameters.CallSid contains the Sid
+                    callSid = call.parameters.CallSid;
+                    setCallState(true);
+                    startTimer();
+                    connectWS(callSid);
+                });
+
+                call.on('disconnect', () => {
+                    console.log('Call disconnected');
+                    statusText.innerText = "השיחה הסתיימה";
+                    activeConnection = null;
+                    hangup();
+                });
+
+                call.on('error', (err) => {
+                    console.error('Call Error:', err);
+                    statusText.innerText = "שגיאה בשיחה";
+                });
 
             } catch (e) {
-                console.error(e);
-                statusText.innerText = "שגיאה בחיוג";
+                console.error('Connection failed:', e);
+                statusText.innerText = "שגיאה בחיוג: " + e.message;
                 setTimeout(() => setCallState(false), 2000);
             }
         }
