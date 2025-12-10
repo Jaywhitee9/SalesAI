@@ -152,34 +152,51 @@ async function registerTwilioRoutes(fastify) {
                     if (callSid) {
                         const call = CallManager.getCall(callSid); // Context already set
 
+                        // Calculate speakers (Logic remains same)
                         // Extract direction from the WebSocket request URL
-                        // fastify-websocket attaches the raw request to connection.socket.upgradeReq or similar, 
-                        // but fastify wrapper 'req' object is available in the handler signature: (connection, req)
-                        const urlParams = new URLSearchParams(req.url.split('?')[1]); // rudimentary parse
+                        const urlParams = new URLSearchParams(req.url.split('?')[1]);
                         const direction = urlParams.get('direction') || 'inbound';
-
-                        // --- SPEAKER MAPPING ---
-                        // "inbound" track = Audio RECEIVED by Twilio (from the caller)
-                        // "outbound" track = Audio SENT by Twilio (to the caller)
 
                         let inboundSpeaker = 'customer';
                         let outboundSpeaker = 'agent';
 
                         if (direction === 'outbound') {
-                            // Agent (Browser) called Customer (PSTN)
-                            // Caller is Agent.
                             inboundSpeaker = 'agent';
                             outboundSpeaker = 'customer';
                         } else {
-                            // Customer (PSTN) called Agent (Twilio)
-                            // Caller is Customer.
                             inboundSpeaker = 'customer';
                             outboundSpeaker = 'agent';
                         }
 
-                        // We map the Twilio track to the correct Soniox Session (which is named by ROLE now, not track)
-                        // We will store sessions by SPEAKER ROLE ('agent', 'customer') to be clear.
+                        // --- DEBUG: Log Media Flow ---
+                        // call.frameCounters is not defined in manager, let's attach locally or extend manager
+                        if (!call.frameCounters) call.frameCounters = { inbound: 0, outbound: 0 };
+                        call.frameCounters[track]++;
 
+                        if (call.frameCounters[track] % 100 === 0) {
+                            console.log(`[Twilio] Stream active: ${call.frameCounters[track]} frames from ${track}`);
+                        }
+
+                        // --- DEBUG: DUMMY MODE (BYPASS SONIOX) ---
+                        // Send a fake transcript every 50 frames to prove UI connection
+
+                        if (call.frameCounters[track] % 50 === 0) {
+                            const debugRole = (track === 'inbound') ? inboundSpeaker : outboundSpeaker;
+                            console.log(`[DEBUG] Injecting dummy transcript for ${debugRole}`);
+
+                            // Emit directly to frontend
+                            CallManager.broadcastToFrontend(callSid, {
+                                type: 'transcript',
+                                role: debugRole,
+                                text: `[DEBUG] Audio received from ${debugRole} (${call.frameCounters[track]})`,
+                                isFinal: true,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        // ----------------------------------------
+
+                        // We map the Twilio track to the correct Soniox Session
                         // Ensure sessions exist for roles
                         if (track === 'inbound') {
                             const role = inboundSpeaker;
