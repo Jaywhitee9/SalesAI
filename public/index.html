@@ -4,611 +4,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Coach - מצב מיקוד</title>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <title>Sales Coach AI - Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Heebo:wght@300;400;500;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#09090b',
+                        surface: '#18181b',
+                        surfaceHighlight: '#27272a',
+                        primary: '#3b82f6',
+                        primaryGlow: 'rgba(59, 130, 246, 0.5)',
+                        accent: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        textMain: '#fafafa',
+                        textMuted: '#a1a1aa'
+                    },
+                    fontFamily: {
+                        sans: ['Heebo', 'Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg-app: #09090b;
-            --bg-panel: #18181b;
-            --bg-card: #27272a;
-            --text-main: #fafafa;
-            --text-muted: #a1a1aa;
-            --accent: #3b82f6;
-            /* Blue */
-            --accent-glow: rgba(59, 130, 246, 0.5);
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #eab308;
-            --border: #3f3f46;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Heebo', sans-serif;
-        }
-
         body {
-            background-color: var(--bg-app);
-            color: var(--text-main);
+            background-color: #09090b;
+            color: #fafafa;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
         }
 
-        /* HEADER */
-        header {
-            height: 60px;
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
+        ::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .logo {
-            font-weight: 800;
-            font-size: 1.2rem;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
 
-        .logo span {
-            color: var(--accent);
-        }
-
-        .call-status-bar {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 100px;
+        ::-webkit-scrollbar-thumb {
             background: #27272a;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            border-radius: 3px;
         }
 
-        .status-badge.live {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.3);
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .pulse {
-            width: 8px;
-            height: 8px;
-            background: currentColor;
-            border-radius: 50%;
-            box-shadow: 0 0 8px currentColor;
-            animation: pulse 2s infinite;
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
         @keyframes pulse {
-            0% {
+
+            0%,
+            100% {
                 opacity: 1;
             }
 
             50% {
-                opacity: 0.5;
+                opacity: .5;
             }
+        }
 
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            80%,
             100% {
-                opacity: 1;
-            }
-        }
-
-        /* MAIN LAYOUT */
-        .workspace {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            /* Coach (Right), Transcript (Left) in RTL */
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* TRANSCRIPT (Left in RTL) */
-        .transcript-panel {
-            padding: 24px;
-            overflow-y: auto;
-            scroll-behavior: smooth;
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 16px;
-            font-size: 1rem;
-            line-height: 1.5;
-            position: relative;
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+                transform: scale(0);
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            40% {
+                transform: scale(1);
             }
-        }
-
-        .message.agent {
-            align-self: flex-start;
-            background: var(--bg-card);
-            border-top-right-radius: 4px;
-            color: var(--text-muted);
-        }
-
-        .message.customer {
-            align-self: flex-end;
-            background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-top-left-radius: 4px;
-            color: var(--text-main);
-        }
-
-        .message-label {
-            font-size: 0.75rem;
-            margin-bottom: 4px;
-            opacity: 0.7;
-            font-weight: 600;
-        }
-
-        .ai-insight-tag {
-            display: inline-block;
-            margin-top: 8px;
-            padding: 4px 8px;
-            background: rgba(234, 179, 8, 0.2);
-            color: #fde047;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        /* COACH (Right in RTL) */
-        .coach-panel {
-            background: var(--bg-panel);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-        }
-
-        /* 1. Radar Gauge */
-        .sales-gauge {
-            text-align: center;
-        }
-
-        .gauge-circle {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 8px solid var(--bg-card);
-            border-top-color: var(--warning);
-            /* Dynamic color */
-            margin: 0 auto 16px;
-            display: grid;
-            place-items: center;
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--warning);
-            box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
-            transition: all 0.5s ease;
-        }
-
-        .gauge-label {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* 2. Primary Tip Card */
-        .tip-card {
-            background: linear-gradient(145deg, #1e1e24, #27272a);
-            border: 1px solid var(--accent-glow);
-            border-radius: 20px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .tip-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-glow));
-        }
-
-        .tip-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            color: var(--accent);
-            font-weight: 700;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .tip-content {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            line-height: 1.4;
-        }
-
-        .tip-action {
-            background: var(--accent);
-            color: white;
-            padding: 12px;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .tip-action:hover {
-            background: #2563eb;
-        }
-
-        /* 3. Simple Checklist */
-        .checklist {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .checklist-title {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-        }
-
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 12px;
-            background: var(--bg-card);
-            margin-bottom: 8px;
-            opacity: 0.6;
-            transition: all 0.3s;
-        }
-
-        .step.active {
-            opacity: 1;
-            border-left: 4px solid var(--accent);
-            background: #2f2f35;
-        }
-
-        .step.done {
-            opacity: 0.4;
-            text-decoration: line-through;
-        }
-
-        .circle {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--text-muted);
-            border-radius: 50%;
-        }
-
-        .step.active .circle {
-            border-color: var(--accent);
-            background: var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
-        }
-
-        .step.done .circle {
-            background: var(--success);
-            border-color: var(--success);
-        }
-
-        /* DIALER MODAL (Overlay) */
-        .dialer-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            display: grid;
-            place-items: center;
-            z-index: 100;
-        }
-
-        .dialer-box {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            padding: 40px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .dialer-input {
-            width: 100%;
-            padding: 20px;
-            font-size: 1.5rem;
-            text-align: center;
-            background: #000;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            color: white;
-            margin-bottom: 24px;
-        }
-
-        .dial-btn {
-            width: 100%;
-            padding: 20px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            background: var(--success);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .dial-btn:hover {
-            transform: scale(1.02);
-        }
-
-        .hidden {
-            display: none !important;
         }
     </style>
 </head>
 
-<body>
+<body class="flex flex-col">
 
-    <!-- DIALER OVERLAY -->
-    <div class="dialer-overlay" id="dialer-screen">
-        <div class="dialer-box">
-            <h2 style="margin-bottom: 24px;">חייגן חכם</h2>
-            <input type="tel" id="phone-input" class="dialer-input" placeholder="050-000-0000">
-            <button class="dial-btn" onclick="startCall()">📞 התחל שיחה</button>
-            <div style="margin-top: 16px; font-size: 0.9rem; color: var(--text-muted);">המערכת תנתח את השיחה בזמן אמת
-            </div>
+    <!-- Navbar -->
+    <nav class="h-16 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center justify-between px-6 z-50">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-lg">
+                S</div>
+            <span class="font-bold text-lg tracking-tight">Sales<span class="text-primary">Coach</span></span>
         </div>
-    </div>
-
-    <!-- APP HEADER -->
-    <header>
-        <div class="logo">Sales<span>Coach</span></div>
-        <div class="call-status-bar hidden" id="live-header">
-            <div id="contact-display">050-123-4567</div>
-            <div class="status-badge live">
-                <div class="pulse"></div> בשיחה (LIVE)
+        <div class="flex items-center gap-4">
+            <div
+                class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surfaceHighlight border border-white/5 text-sm text-green-400">
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                <span>מחובר (Online)</span>
             </div>
-            <div id="timer" style="font-weight: 600;">00:00</div>
-            <button onclick="hangup()"
-                style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 16px; border-radius: 8px; cursor: pointer;">סיים
-                שיחה</button>
+            <button
+                class="w-8 h-8 rounded-full bg-surfaceHighlight flex items-center justify-center hover:bg-white/10 transition">⚙️</button>
         </div>
-    </header>
+    </nav>
 
-    <!-- MAIN WORKSPACE -->
-    <div class="workspace">
+    <!-- Main Grid -->
+    <main class="flex-1 grid grid-cols-12 gap-0 overflow-hidden">
 
-        <!-- TRANSCRIPT PANEL -->
-        <div class="transcript-panel" id="transcript">
-            <!-- Messages will appear here -->
-            <div style="text-align: center; color: var(--text-muted); margin-top: 40px;">
-                התמלול יופיע כאן ברגע שהשיחה תתחיל...
-            </div>
-        </div>
+        <!-- LEFT COLUMN: Dialer & Stats (3 Columns) -->
+        <aside class="col-span-3 border-l border-white/5 bg-surface/30 flex flex-col">
+            <div class="p-6 border-b border-white/5">
+                <h2 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-4">חייגן</h2>
 
-        <!-- AI COACH PANEL -->
-        <aside class="coach-panel">
-
-            <!-- 1. GAUGE -->
-            <div class="sales-gauge">
-                <div class="gauge-circle" id="lead-score">50</div>
-                <div class="gauge-label">סיכויי הצלחה</div>
-            </div>
-
-            <!-- 2. MAIN TIP -->
-            <div class="tip-card" id="ai-card">
-                <div class="tip-header">💡 המלצה חכמה</div>
-                <div class="tip-content">ממתין לתחילת שיחה...</div>
-                <div class="tip-action">המתן לניתוח ראשוני</div>
-            </div>
-
-            <!-- 3. CHECKLIST -->
-            <div class="checklist">
-                <div class="checklist-title">צעדים בשיחה</div>
-                <div class="step active" id="step-1">
-                    <div class="circle"></div>
-                    <div>פתיחה וחיבור אישי</div>
+                <!-- Dialer -->
+                <div class="bg-surfaceHighlight/50 p-1 rounded-2xl border border-white/5 mb-4">
+                    <input type="tel" id="phone-input"
+                        class="w-full bg-transparent text-center text-xl font-mono py-4 focus:outline-none text-white tracking-widest placeholder-white/20"
+                        placeholder="050-000-0000">
                 </div>
-                <div class="step" id="step-2">
-                    <div class="circle"></div>
-                    <div>בירור צרכים (ה-למה?)</div>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button onclick="startCall()" id="btn-call"
+                        class="col-span-2 py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all transform active:scale-95">
+                        <span>📞</span> חייג עכשיו
+                    </button>
+                    <button onclick="hangup()" id="btn-hangup"
+                        class="col-span-2 hidden py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all">
+                        <span>⛔</span> סיים שיחה
+                    </button>
                 </div>
-                <div class="step" id="step-3">
-                    <div class="circle"></div>
-                    <div>הצגת הפתרון</div>
-                </div>
-                <div class="step" id="step-4">
-                    <div class="circle"></div>
-                    <div>טיפול בהתנגדויות</div>
-                </div>
-                <div class="step" id="step-5">
-                    <div class="circle"></div>
-                    <div>סגירה / הנעה לפעולה</div>
-                </div>
+
+                <!-- Status Text -->
+                <div id="call-status-text" class="text-center text-sm text-textMuted h-6">מוכן לשיחה</div>
             </div>
 
+            <!-- Stats / History -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <h3 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">שיחות אחרונות</h3>
+                <div class="space-y-2">
+                    <div
+                        class="p-3 rounded-lg bg-surfaceHighlight/30 border border-white/5 flex justify-between items-center text-sm hover:bg-surfaceHighlight/50 cursor-pointer transition">
+                        <div>
+                            <div class="font-medium">דניאל כהן</div>
+                            <div class="text-xs text-textMuted">לפני 15 דק'</div>
+                        </div>
+                        <div class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-xs">85 נק'</div>
+                    </div>
+                    <div
+                        class="p-3 rounded-lg bg-surfaceHighlight/30 border border-white/5 flex justify-between items-center text-sm hover:bg-surfaceHighlight/50 cursor-pointer transition">
+                        <div>
+                            <div class="font-medium">שרה לוי</div>
+                            <div class="text-xs text-textMuted">לפני 42 דק'</div>
+                        </div>
+                        <div class="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400 text-xs">60 נק'</div>
+                    </div>
+                </div>
+            </div>
         </aside>
 
-    </div>
+        <!-- CENTER COLUMN: Transcript (6 Columns) -->
+        <div class="col-span-6 flex flex-col bg-background relative">
+            <!-- Header -->
+            <div
+                class="h-14 border-b border-white/5 flex items-center justify-between px-6 bg-surface/20 backdrop-blur z-10">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium text-textMuted">שיחה פעילה:</span>
+                    <span id="active-contact" class="font-mono font-bold tracking-wide">--</span>
+                </div>
+                <div id="call-timer"
+                    class="font-mono text-xl text-primary font-bold opacity-0 transition-opacity duration-300">00:00
+                </div>
+            </div>
+
+            <!-- Feed -->
+            <div id="transcript-feed" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth pb-24">
+                <div class="text-center py-20 opacity-30">
+                    <div class="text-6xl mb-4">💬</div>
+                    <div class="text-lg">התמלול יופיע כאן בזמן אמת</div>
+                </div>
+            </div>
+
+            <!-- Input Area (Notes) -->
+            <div class="p-4 border-t border-white/5 bg-surface/40 backdrop-blur absolute bottom-0 w-full">
+                <div class="relative">
+                    <input type="text"
+                        class="w-full bg-surfaceHighlight border border-white/10 rounded-xl px-4 py-3 pl-10 focus:outline-none focus:border-primary/50 transition placeholder-textMuted"
+                        placeholder="הוסף הערה אישית...">
+                    <span class="absolute left-3 top-3.5 opacity-50">↵</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Coach AI (3 Columns) -->
+        <aside class="col-span-3 border-r border-white/5 bg-surface/30 flex flex-col overflow-hidden">
+
+            <!-- Live Analysis Header -->
+            <div class="p-5 border-b border-white/5">
+                <h2 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-4">Live Analysis</h2>
+
+                <!-- Meter -->
+                <div class="relative h-32 flex items-center justify-center mb-2">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent"
+                            class="text-surfaceHighlight" />
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent"
+                            class="text-primary stroke-dasharray-350 stroke-dashoffset-100 transition-all duration-1000"
+                            id="score-ring" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-3xl font-bold" id="score-val">--</span>
+                        <span class="text-[10px] text-textMuted uppercase mt-1">ציון התאמה</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-5 space-y-6">
+
+                <!-- AI Insight Card -->
+                <div id="ai-insight-card"
+                    class="glass-panel p-5 rounded-2xl relative overflow-hidden group transition-all duration-300 hover:border-primary/30">
+                    <div class="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-primary to-accent"></div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-lg animate-bounce">💡</span>
+                        <span class="font-bold text-sm text-primary uppercase tracking-wide">המלצה חכמה</span>
+                    </div>
+                    <div id="insight-text" class="font-medium text-lg leading-relaxed mb-3">
+                        המערכת ממתינה לנתונים...
+                    </div>
+                    <div id="insight-suggestion"
+                        class="hidden text-sm text-textMuted bg-white/5 p-3 rounded-lg border-r-2 border-primary/50 italic">
+                        "אני מבין את החשש, בוא נראה איך..."
+                    </div>
+                </div>
+
+                <!-- Checklist -->
+                <div>
+                    <h3 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">שלבי שיחה</h3>
+                    <div class="space-y-2">
+                        <div
+                            class="flex items-center gap-3 p-3 rounded-xl bg-surfaceHighlight/50 border border-white/5 opacity-50">
+                            <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
+                            <div class="text-sm">פתיחה וחיבור</div>
+                        </div>
+                        <div
+                            class="flex items-center gap-3 p-3 rounded-xl bg-surfaceHighlight/50 border border-white/5 opacity-50">
+                            <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
+                            <div class="text-sm">זיהוי צרכים</div>
+                        </div>
+                        <div
+                            class="flex items-center gap-3 p-3 rounded-xl bg-surfaceHighlight/50 border border-white/5 opacity-50">
+                            <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
+                            <div class="text-sm">הצגת פתרון</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
 
     <script>
+        // State
+        let isCallActive = false;
         let callTimer = null;
         let seconds = 0;
         let ws = null;
+        let callSid = null;
 
+        const btnCall = document.getElementById('btn-call');
+        const btnHangup = document.getElementById('btn-hangup');
+        const inputPhone = document.getElementById('phone-input');
+        const statusText = document.getElementById('call-status-text');
+        const timerDisplay = document.getElementById('call-timer');
+        const activeContact = document.getElementById('active-contact');
+        const feed = document.getElementById('transcript-feed');
+
+        // Functions
         async function startCall() {
-            const phone = document.getElementById('phone-input').value;
-            if (!phone) return alert('נא להכניס מספר');
+            const phone = inputPhone.value;
+            if (!phone) {
+                inputPhone.classList.add('border-red-500');
+                setTimeout(() => inputPhone.classList.remove('border-red-500'), 2000);
+                return;
+            }
 
-            // UI Updates
-            document.getElementById('dialer-screen').classList.add('hidden');
-            document.getElementById('live-header').classList.remove('hidden');
-            document.getElementById('contact-display').innerText = phone;
-            document.getElementById('transcript').innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 0.9rem;">מתקשר...</div>';
+            setCallState(true);
+            activeContact.innerText = phone;
+            statusText.innerText = "מתקשר... (ממתין לתשובה)";
 
-            // Start Timer
-            seconds = 0;
-            callTimer = setInterval(() => {
-                seconds++;
-                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                const s = (seconds % 60).toString().padStart(2, '0');
-                document.getElementById('timer').innerText = `${m}:${s}`;
-            }, 1000);
+            // Clean feed
+            feed.innerHTML = '';
 
-            // Backend Call
             try {
-                const res = await fetch('/api/make-call', {
+                // Determine API URL (Local vs Prod)
+                const apiUrl = '/api/make-call';
+
+                const res = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ to: phone })
                 });
-                const data = await res.json();
 
+                const data = await res.json();
                 if (data.success) {
-                    window.currentCallSid = data.callSid;
-                    connectWS(data.callSid);
-                    updateTip("השיחה מתחילה...", "הקשב ללקוח והצג את עצמך בביטחון.");
+                    callSid = data.callSid;
+                    statusText.innerText = "בשיחה";
+                    startTimer();
+                    connectWS(callSid);
                 } else {
-                    alert('שגיאה בחיוג');
-                    resetUI();
+                    throw new Error(data.error || 'Failed');
                 }
             } catch (e) {
                 console.error(e);
-                alert('תקלה בהתקשרות');
-                resetUI();
+                statusText.innerText = "שגיאה בחיוג";
+                setTimeout(() => setCallState(false), 2000);
             }
         }
 
         async function hangup() {
-            if (window.currentCallSid) {
+            if (callSid) {
+                statusText.innerText = "מנתק...";
                 await fetch('/api/end-call', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ callSid: window.currentCallSid })
+                    body: JSON.stringify({ callSid })
                 });
             }
-            resetUI();
-            // Go to summary (mock)
+            setCallState(false);
             window.location.href = '/summary.html';
         }
 
-        function resetUI() {
+        function setCallState(active) {
+            isCallActive = active;
+            if (active) {
+                btnCall.classList.add('hidden');
+                btnHangup.classList.remove('hidden');
+                timerDisplay.classList.remove('opacity-0');
+            } else {
+                btnCall.classList.remove('hidden');
+                btnHangup.classList.add('hidden');
+                timerDisplay.classList.add('opacity-0');
+                clearInterval(callTimer);
+                seconds = 0;
+            }
+        }
+
+        function startTimer() {
             clearInterval(callTimer);
-            document.getElementById('dialer-screen').classList.remove('hidden');
-            document.getElementById('live-header').classList.add('hidden');
-            if (ws) ws.close();
+            callTimer = setInterval(() => {
+                seconds++;
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                timerDisplay.innerText = `${m}:${s}`;
+            }, 1000);
         }
 
         function connectWS(sid) {
             const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Note: I'm relying on host being correct (localhost:3000 or ngrok public url)
-            // If user accesses via ngrok, host is ngrok. Safe.
             ws = new WebSocket(`${proto}//${location.host}/ws/coach?callSid=${sid}`);
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                if (data.type === 'transcript') addMessage(data);
-                if (data.type === 'coaching') updateTip('טיפ חדש!', data.message, data.suggested_reply);
+                if (data.type === 'transcript') addTranscriptItem(data);
+                if (data.type === 'coaching') updateInsight(data);
             };
         }
 
-        function addMessage(data) {
+        function addTranscriptItem(data) {
+            const isAgent = data.role === 'agent';
             const div = document.createElement('div');
-            div.className = `message ${data.role === 'agent' ? 'agent' : 'customer'}`;
+            div.className = `flex ${isAgent ? 'justify-start' : 'justify-end'} mb-4`;
 
-            let html = `<div class="message-label">${data.role === 'agent' ? 'אתה' : 'לקוח'}</div>`;
-            html += `<div>${data.text}</div>`;
+            div.innerHTML = `
+                <div class="max-w-[75%] ${isAgent ? 'bg-surfaceHighlight' : 'bg-primary/20 border border-primary/20'} p-4 rounded-2xl rounded-${isAgent ? 'tr' : 'tl'}-sm">
+                    <div class="text-xs ${isAgent ? 'text-textMuted' : 'text-primary'} mb-1 font-bold">${isAgent ? 'נציג' : 'לקוח'}</div>
+                    <div class="text-sm leading-relaxed">${data.text}</div>
+                </div>
+            `;
 
-            // Simulating AI insight detection (Mock logic for UI demo)
-            if (data.text.includes('כסף') || data.text.includes('יקר')) {
-                html += `<div class="ai-insight-tag">💰 זוהתה רגישות למחיר</div>`;
-                updateScore(40); // Drop score
-            }
-            if (data.text.includes('מעניין')) {
-                updateScore(75); // Increase score
-            }
-
-            div.innerHTML = html;
-            document.getElementById('transcript').appendChild(div);
-            // Auto scroll? 
-            // panel.scrollTop = panel.scrollHeight;
-            div.scrollIntoView({ behavior: 'smooth' });
+            feed.appendChild(div);
+            feed.scrollTop = feed.scrollHeight;
         }
 
-        function updateTip(title, text, suggested) {
-            const card = document.getElementById('ai-card');
-            let html = '<div class="tip-header">💡 ' + title + '</div>' +
-                '<div class="tip-content">' + text + '</div>';
+        function updateInsight(data) {
+            const card = document.getElementById('ai-insight-card');
+            const textEl = document.getElementById('insight-text');
+            const suggestEl = document.getElementById('insight-suggestion');
 
-            if (suggested) {
-                html += '<div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:8px; margin-bottom:12px; font-style:italic; font-size:0.9rem;">"' + suggested + '"</div>';
+            // Flash effect
+            card.classList.add('border-primary');
+            setTimeout(() => card.classList.remove('border-primary'), 500);
+
+            textEl.innerText = data.message;
+            if (data.suggested_reply) {
+                suggestEl.innerText = `"${data.suggested_reply}"`;
+                suggestEl.classList.remove('hidden');
+            } else {
+                suggestEl.classList.add('hidden');
             }
-
-            html += '<div class="tip-action" onclick="this.style.background=\'#22c55e\'">✓ בוצע</div>';
-            card.innerHTML = html;
-
-            // Simple animation
-            card.style.transform = "scale(1.05)";
-            setTimeout(() => card.style.transform = "scale(1)", 200);
         }
 
-        function updateScore(score) {
-            const el = document.getElementById('lead-score');
-            el.innerText = score;
-            if (score > 70) el.style.color = '#22c55e'; // Green
-            else if (score < 50) el.style.color = '#ef4444'; // Red
-            else el.style.color = '#eab308'; // Yellow
-
-            document.querySelector('.gauge-circle').style.borderColor = el.style.color;
-        }
-
-        // --- DEV SIMULATION ---
+        // --- DEV SHORTCUT ---
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'S' && e.shiftKey) {
-                // Mock flow
-                addMessage({ role: 'agent', text: 'שלום, מדבר דניאל.' });
-                setTimeout(() => addMessage({ role: 'customer', text: 'שלום, כמה זה עולה?' }), 2000);
-                setTimeout(() => updateTip('טיפול בהתנגדות', 'אל תענה ישר על המחיר. שאל על הצרכים קודם.', 'האם אנחנו יכולים לדבר רגע על מה שחשוב לכם במוצר לפני שמדברים על עלויות?'), 2500);
+            if (e.shiftKey && e.key === 'S') {
+                if (!isCallActive) startCall();
+                setTimeout(() => addTranscriptItem({ role: 'agent', text: 'שלום, כאן יוסי מחברת סיילס.' }), 1000);
+                setTimeout(() => addTranscriptItem({ role: 'customer', text: 'היי, תגיד כמה עולה המנוי?' }), 2500);
+                setTimeout(() => updateInsight({ message: 'הלקוח שואל על מחיר מוקדם מדי.', suggested_reply: 'עדיף קודם להבין את הצרכים. נסה: "לפני שנדבר על מחיר, חשוב לי להבין מה בדיוק אתם צריכים כדי לתת הצעה מדויקת."' }), 3500);
             }
         });
+
     </script>
 </body>
 

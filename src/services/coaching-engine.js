@@ -3,7 +3,8 @@ const OpenAI = require("openai");
 class CoachingEngine {
     constructor() {
         this.openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
+            apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY || "_DUMMY_API_KEY_",
+            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
         });
     }
 
