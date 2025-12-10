@@ -12,7 +12,14 @@ async function registerTwilioRoutes(fastify) {
         const wsUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://');
 
         // "To" parameter indicates an outbound call attempt or the number dialed
-        const { To } = request.body || request.query;
+        // "To" logic:
+        // 1. "To" from Twilio is usually the TwiML App SID or the number dialed if coming from PSTN.
+        // 2. "target_number" is our custom parameter from the browser SDK.
+        const { To, target_number } = request.body || request.query;
+
+        console.log('[Twilio] Incoming Voice Request:', { To, target_number, body: request.body });
+
+        const destination = target_number || To; // Prefer custom param
 
         reply.type('text/xml');
 
@@ -36,7 +43,7 @@ async function registerTwilioRoutes(fastify) {
 
             // 3. DIAL LOGIC
             // Normalize "To" number to E.164 if dealing with Israeli numbers
-            let targetNumber = To;
+            let targetNumber = destination;
             if (targetNumber) {
                 // Remove non-digits
                 let cleanNumber = targetNumber.replace(/\D/g, '');
