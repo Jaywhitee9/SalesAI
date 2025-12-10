@@ -42,6 +42,9 @@ class SonioxService {
                 // Adhere to Soniox API docs structure.
 
                 // For Soniox, standard response: { text: "...", is_final: boolean, ... }
+                console.log('[Soniox] Raw:', JSON.stringify(response).substring(0, 200));
+                console.log('[Soniox] Response:', JSON.stringify(response));
+
                 if (response.text) {
                     onTranscript(response.text, response.is_final);
                 }

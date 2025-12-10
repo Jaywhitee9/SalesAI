@@ -62,7 +62,8 @@ class CallManager extends EventEmitter {
     const call = this.getCall(callSid);
 
     // Map track to role
-    const uiRole = role === 'inbound' ? 'customer' : 'agent';
+    // Map track to role if needed, otherwise use as is
+    const uiRole = (role === 'inbound') ? 'customer' : (role === 'outbound' ? 'agent' : role);
 
     if (isFinal) {
       call.transcripts[uiRole].push({
