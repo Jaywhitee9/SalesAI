@@ -35,9 +35,13 @@ async function registerTwilioRoutes(fastify) {
             }, 'שלום, הגעתם למאמן המכירות. השיחה מוקלטת לצורך שיפור השירות.');
 
             // 2. FORK AUDIO to AI (WebSocket)
+            // Determine direction for the stream handler
+            const callDirection = (targetNumber && targetNumber !== process.env.TWILIO_PHONE_NUMBER) ? 'outbound' : 'inbound';
+            const streamUrl = `${wsUrl}/twilio-stream?direction=${callDirection}`;
+
             const start = response.start();
             start.stream({
-                url: `${wsUrl}/twilio-stream`,
+                url: streamUrl,
                 track: 'both_tracks'
             });
 
@@ -125,15 +129,21 @@ async function registerTwilioRoutes(fastify) {
                     const call = CallManager.getCall(callSid, context);
 
                     // --- CRITICAL: OPEN DUAL SONIOX SESSIONS ---
-                    // 1) Inbound (Customer)
-                    call.sonioxSockets.inbound = SonioxService.createSession(callSid, 'inbound', (text, isFinal) => {
-                        handleTranscript(callSid, 'inbound', text, isFinal);
-                    });
+                    // Sessions are now created lazily on first media packet or explicitly here if we prefer.
+                    // But since we need the direction which is clearer in the 'media' event loop (or we could parse it here too),
+                    // Let's do it lazily in 'media' block to keep the logic unified or parse it here.
 
-                    // 2) Outbound (Agent)
-                    call.sonioxSockets.outbound = SonioxService.createSession(callSid, 'outbound', (text, isFinal) => {
-                        handleTranscript(callSid, 'outbound', text, isFinal);
-                    });
+                    // Actually, let's just logging here and let 'media' event drive the session creation 
+                    // to ensure we have the track info correct.
+                    // OR better: Parse direction here and init. 
+
+                    const urlParams = new URLSearchParams(req.url.split('?')[1]);
+                    const direction = urlParams.get('direction') || 'inbound';
+                    console.log(`[Twilio] Stream Direction: ${direction}`);
+
+                    // We removed the eager initialization here in favor of lazy init in the 'media' block 
+                    // where we have the 'track' information handy to map to role.
+                    // This prevents creating a session for a track that might not send audio (e.g. silence).
 
                 } else if (data.event === 'media') {
                     const track = data.media.track;
@@ -142,10 +152,52 @@ async function registerTwilioRoutes(fastify) {
                     if (callSid) {
                         const call = CallManager.getCall(callSid); // Context already set
 
-                        if (track === 'inbound' && call.sonioxSockets.inbound) {
-                            call.sonioxSockets.inbound.sendAudio(Buffer.from(payload, 'base64'));
-                        } else if (track === 'outbound' && call.sonioxSockets.outbound) {
-                            call.sonioxSockets.outbound.sendAudio(Buffer.from(payload, 'base64'));
+                        // Extract direction from the WebSocket request URL
+                        // fastify-websocket attaches the raw request to connection.socket.upgradeReq or similar, 
+                        // but fastify wrapper 'req' object is available in the handler signature: (connection, req)
+                        const urlParams = new URLSearchParams(req.url.split('?')[1]); // rudimentary parse
+                        const direction = urlParams.get('direction') || 'inbound';
+
+                        // --- SPEAKER MAPPING ---
+                        // "inbound" track = Audio RECEIVED by Twilio (from the caller)
+                        // "outbound" track = Audio SENT by Twilio (to the caller)
+
+                        let inboundSpeaker = 'customer';
+                        let outboundSpeaker = 'agent';
+
+                        if (direction === 'outbound') {
+                            // Agent (Browser) called Customer (PSTN)
+                            // Caller is Agent.
+                            inboundSpeaker = 'agent';
+                            outboundSpeaker = 'customer';
+                        } else {
+                            // Customer (PSTN) called Agent (Twilio)
+                            // Caller is Customer.
+                            inboundSpeaker = 'customer';
+                            outboundSpeaker = 'agent';
+                        }
+
+                        // We map the Twilio track to the correct Soniox Session (which is named by ROLE now, not track)
+                        // We will store sessions by SPEAKER ROLE ('agent', 'customer') to be clear.
+
+                        // Ensure sessions exist for roles
+                        if (track === 'inbound') {
+                            const role = inboundSpeaker;
+                            if (!call.sonioxSockets[role]) {
+                                call.sonioxSockets[role] = SonioxService.createSession(callSid, role, (text, isFinal) => {
+                                    handleTranscript(callSid, role, text, isFinal);
+                                });
+                            }
+                            call.sonioxSockets[role].sendAudio(Buffer.from(payload, 'base64'));
+
+                        } else if (track === 'outbound') {
+                            const role = outboundSpeaker;
+                            if (!call.sonioxSockets[role]) {
+                                call.sonioxSockets[role] = SonioxService.createSession(callSid, role, (text, isFinal) => {
+                                    handleTranscript(callSid, role, text, isFinal);
+                                });
+                            }
+                            call.sonioxSockets[role].sendAudio(Buffer.from(payload, 'base64'));
                         }
                     }
 
