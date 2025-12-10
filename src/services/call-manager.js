@@ -57,45 +57,22 @@ class CallManager extends EventEmitter {
     }
   }
 
-  // Helper to append transcript and emit update
+  // Helper to append transcript (storage only, broadcasting handled by handler)
   addTranscript(callSid, role, text, isFinal) {
     const call = this.getCall(callSid);
 
-    // Map track to role
-    // Map track to role if needed, otherwise use as is
+    // Map track to role if needed
     const uiRole = (role === 'inbound') ? 'customer' : (role === 'outbound' ? 'agent' : role);
 
+    // Only store FINAL transcripts for history/summary
     if (isFinal) {
       call.transcripts[uiRole].push({
         text,
         timestamp: Date.now()
       });
-
       this.emit('transcript_final', { callSid, role: uiRole, text });
-
-      // Also broadcast to frontend
-      this.broadcastToFrontend(callSid, {
-        type: 'transcript',
-        role: uiRole,
-        text,
-        isFinal: true,
-        // Optional fields for schema consistency
-        severity: null,
-        message: null,
-        suggested_reply: null
-      });
-    } else {
-      // Broadcast partial to frontend
-      this.broadcastToFrontend(callSid, {
-        type: 'transcript',
-        role: uiRole,
-        text,
-        isFinal: false,
-        severity: null,
-        message: null,
-        suggested_reply: null
-      });
     }
+    // Note: Broadcasting is now handled ONLY in twilio-handler.js to avoid duplicates
   }
 
   broadcastToFrontend(callSid, message) {
