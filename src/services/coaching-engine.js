@@ -121,29 +121,31 @@ Your tasks:
                 severity: 'error'
             };
         }
+    }
+
     /**
      * Generate final call summary
      * @param {Object} callState 
      */
     async generateSummary(callState) {
-            const { callSid, transcripts } = callState;
+        const { callSid, transcripts } = callState;
 
-            // Merge history
-            const mixedHistory = [
-                ...transcripts.customer.map(t => ({ role: 'customer', text: t.text, timestamp: t.timestamp })),
-                ...transcripts.agent.map(t => ({ role: 'agent', text: t.text, timestamp: t.timestamp }))
-            ].sort((a, b) => a.timestamp - b.timestamp);
+        // Merge history
+        const mixedHistory = [
+            ...transcripts.customer.map(t => ({ role: 'customer', text: t.text, timestamp: t.timestamp })),
+            ...transcripts.agent.map(t => ({ role: 'agent', text: t.text, timestamp: t.timestamp }))
+        ].sort((a, b) => a.timestamp - b.timestamp);
 
-            const conversationText = mixedHistory
-                .map((entry) => {
-                    const roleHebrew = entry.role === 'agent' ? 'נציג מכירות' : 'לקוח';
-                    return `${roleHebrew}: ${entry.text}`;
-                })
-                .join("\n");
+        const conversationText = mixedHistory
+            .map((entry) => {
+                const roleHebrew = entry.role === 'agent' ? 'נציג מכירות' : 'לקוח';
+                return `${roleHebrew}: ${entry.text}`;
+            })
+            .join("\n");
 
-            if (!conversationText) return null;
+        if (!conversationText) return null;
 
-            const systemPrompt = `
+        const systemPrompt = `
 You are a **Sales Call Evaluator**.
 Analyze the FULL conversation and provide a structured summary in HEBREW.
 
@@ -159,26 +161,26 @@ Output structured JSON:
 }
 `;
 
-            try {
-                const response = await this.openai.chat.completions.create({
-                    model: "gpt-4-turbo-preview",
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: conversationText }
-                    ],
-                    response_format: { type: "json_object" },
-                    max_tokens: 400,
-                    temperature: 0.3
-                });
+        try {
+            const response = await this.openai.chat.completions.create({
+                model: "gpt-4-turbo-preview",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: conversationText }
+                ],
+                response_format: { type: "json_object" },
+                max_tokens: 400,
+                temperature: 0.3
+            });
 
-                const content = response.choices[0].message.content;
-                return JSON.parse(content);
+            const content = response.choices[0].message.content;
+            return JSON.parse(content);
 
-            } catch (e) {
-                console.error(`[Coaching] Summary Generation Failed:`, e.message);
-                return null;
-            }
+        } catch (e) {
+            console.error(`[Coaching] Summary Generation Failed:`, e.message);
+            return null;
         }
     }
+}
 
 module.exports = new CoachingEngine();
