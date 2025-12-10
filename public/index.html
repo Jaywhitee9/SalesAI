@@ -163,8 +163,11 @@
         #transcript-panel {
             display: flex;
             flex-direction: column;
-            height: 100%;
-            overflow: hidden;
+            flex: 1;
+            /* Occupy remaining space */
+            min-height: 0;
+            /* Critical for flex scrolling */
+            width: 100%;
             position: relative;
         }
 
@@ -371,7 +374,7 @@
         </aside>
 
         <!-- CENTER COLUMN: Transcript (6 Columns) -->
-        <div class="col-span-6 flex flex-col bg-background relative">
+        <div class="col-span-6 flex flex-col bg-background relative h-full overflow-hidden">
             <!-- Header -->
             <div
                 class="h-14 border-b border-white/5 flex items-center justify-between px-6 bg-surface/20 backdrop-blur z-10">
@@ -384,7 +387,6 @@
                 </div>
             </div>
 
-            <!-- Feed -->
             <!-- Feed -->
             <div id="transcript-panel">
                 <div id="transcript-scroll" class="transcript-scroll">
