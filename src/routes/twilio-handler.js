@@ -36,7 +36,7 @@ async function registerTwilioRoutes(fastify) {
 
             // 2. FORK AUDIO to AI (WebSocket)
             // Determine direction for the stream handler
-            const callDirection = (targetNumber && targetNumber !== process.env.TWILIO_PHONE_NUMBER) ? 'outbound' : 'inbound';
+            const callDirection = (destination && destination !== process.env.TWILIO_PHONE_NUMBER) ? 'outbound' : 'inbound';
             const streamUrl = `${wsUrl}/twilio-stream?direction=${callDirection}`;
 
             const start = response.start();
