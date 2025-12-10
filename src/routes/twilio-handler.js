@@ -6,19 +6,40 @@ const TenantStore = require('../services/tenant-store');
 async function registerTwilioRoutes(fastify) {
 
     // 1. HTTP Endpoint for Inbound/Outbound Calls
+    // 1. HTTP Endpoint for Inbound/Outbound Calls
     const voiceHandler = async (request, reply) => {
         const baseUrl = process.env.PUBLIC_URL || `https://${request.headers.host}`;
         const wsUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://');
 
+        // "To" parameter indicates an outbound call attempt or the number dialed
+        const { To } = request.body || request.query;
+
         reply.type('text/xml');
 
-        // TwiML: Connect to Media Stream
+        // Logic:
+        // 1. <Start> <Stream> -> Forks audio to our AI Engine
+        // 2. <Dial> -> Connects the caller to the destination
+
+        let dialAction = '';
+
+        // If the number looks like a real phone number, dial it (PSTN)
+        // Otherwise, if it's a client name (e.g. 'client:user_123'), dial the client
+        // For simplicity here, if it's NOT our own number, we dial it.
+
+        if (To && To !== process.env.TWILIO_PHONE_NUMBER) {
+            dialAction = `<Dial callerId="${process.env.TWILIO_PHONE_NUMBER}">${To}</Dial>`;
+        } else {
+            // If incoming TO our number, dial the browser client (e.g. 'support_agent')
+            // For this demo, let's just Say something since we are focusing on outbound
+            dialAction = `<Say>Welcome to Sales Coach AI. Please wait.</Say>`;
+        }
+
         return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="he-IL">שלום, מתחבר למערכת</Say>
-  <Connect>
+  <Start>
     <Stream url="${wsUrl}/twilio-stream" track="both_tracks" />
-  </Connect>
+  </Start>
+  ${dialAction}
 </Response>`;
     };
 

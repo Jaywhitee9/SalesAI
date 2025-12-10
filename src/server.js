@@ -30,6 +30,7 @@ fastify.register(async function (fastify) {
     await registerTwilioRoutes(fastify);
     await registerClientRoutes(fastify);
     await registerOutboundRoutes(fastify);
+    await require('./routes/token-handler')(fastify);
 });
 
 fastify.get('/health', async (request, reply) => {
@@ -39,11 +40,32 @@ fastify.get('/health', async (request, reply) => {
 // Note: The root '/' route is now handled by fastifyStatic (index.html)
 // unless we override it directly, but for typical SPA/static use, static takes care of it.
 
+const detectNgrokUrl = require('./utils/ngrok-detector');
+
 const start = async () => {
     try {
+        // --- AUTO DETECT NGROK (PRIORITY) ---
+        // If ngrok is running, we assume we are in local dev and want to use it,
+        // even if .env has a production URL.
+        const ngrokUrl = await detectNgrokUrl();
+        if (ngrokUrl) {
+            process.env.PUBLIC_URL = ngrokUrl;
+            fastify.log.info(`[Ngrok] Auto-detected Public URL: ${ngrokUrl} (Overriding env)`);
+        } else if (!process.env.PUBLIC_URL) {
+            fastify.log.warn('[Ngrok] Could not detect public URL and PUBLIC_URL not set.');
+        } else {
+            fastify.log.info(`[Config] Using configured Public URL: ${process.env.PUBLIC_URL}`);
+        }
+
         const PORT = process.env.PORT || 3000;
         await fastify.listen({ port: PORT, host: '0.0.0.0' });
         fastify.log.info(`Server listening on ${PORT}`);
+
+        // --- CONFIG CHECK ---
+        if (!process.env.SONIOX_API_KEY) {
+            fastify.log.error('!!! MISSING SONIOX_API_KEY !!! Voice transcription will not work.');
+        }
+
     } catch (err) {
         fastify.log.error(err);
         process.exit(1);

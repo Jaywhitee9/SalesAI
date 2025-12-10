@@ -280,13 +280,16 @@
 
     </main>
 
+    <script src="https://sdk.twilio.com/js/client/releases/2.11.0/twilio.min.js"></script>
     <script>
         // State
         let isCallActive = false;
         let callTimer = null;
         let seconds = 0;
         let ws = null;
-        let callSid = null;
+        let activeConnection = null;
+        let device = null;
+        let callSid = null; // Will be set from Twilio Connection
 
         const btnCall = document.getElementById('btn-call');
         const btnHangup = document.getElementById('btn-hangup');
@@ -295,6 +298,72 @@
         const timerDisplay = document.getElementById('call-timer');
         const activeContact = document.getElementById('active-contact');
         const feed = document.getElementById('transcript-feed');
+
+        // --- INIT DEVICE ON LOAD ---
+        async function initDevice() {
+            try {
+                console.log('Fetching token from /api/token...');
+                statusText.innerText = "טוען חיבור לטלפון...";
+
+                const res = await fetch('/api/token');
+                if (!res.ok) throw new Error(`Token fetch failed: ${res.status} ${res.statusText}`);
+
+                const data = await res.json();
+                console.log('Token received:', data);
+
+                device = new Twilio.Device(data.token, {
+                    codecPreferences: ['opus', 'pcmu'],
+                    fakeLocalDTMF: true,
+                    enableRingingState: true,
+                    debug: true
+                });
+
+                device.on('ready', function (device) {
+                    console.log('Twilio.Device Ready!');
+                    statusText.innerText = "מוכן לשיחה (Softphone Connected)";
+                    statusText.classList.add('text-green-400');
+                });
+
+                device.on('error', function (error) {
+                    console.error('Twilio.Device Error:', error);
+                    statusText.innerText = "שגיאה: " + error.message;
+                    statusText.classList.add('text-red-500');
+                });
+
+                device.on('connect', function (conn) {
+                    console.log('Successfully established call!');
+                    statusText.innerText = "בשיחה";
+                    activeConnection = conn;
+                    callSid = conn.parameters.CallSid;
+                    setCallState(true);
+                    startTimer();
+                    connectWS(callSid);
+                });
+
+                device.on('disconnect', function (conn) {
+                    console.log('Call ended.');
+                    statusText.innerText = "השיחה הסתיימה";
+                    activeConnection = null;
+                    hangup();
+                });
+
+            } catch (err) {
+                console.error('CRITICAL Error during Device init:', err);
+                statusText.innerText = "שגיאת אתחול: " + err.message;
+                statusText.classList.add('text-red-500');
+            }
+        }
+
+        // --- INIT DEVICE ON LOAD ---
+        window.addEventListener('load', () => {
+            if (typeof Twilio === 'undefined') {
+                console.error('Twilio SDK failed to load.');
+                statusText.innerText = "שגיאה: Twilio SDK לא נטען. בדוק חיבור לרשת.";
+                statusText.classList.add('text-red-500');
+                return;
+            }
+            initDevice();
+        });
 
         // Functions
         async function startCall() {
@@ -305,32 +374,25 @@
                 return;
             }
 
-            setCallState(true);
-            activeContact.innerText = phone;
-            statusText.innerText = "מתקשר... (ממתין לתשובה)";
+            if (!device) {
+                alert('Device not initialized yet. Please wait.');
+                return;
+            }
 
-            // Clean feed
-            feed.innerHTML = '';
+            statusText.innerText = "מתקשר...";
+            activeContact.innerText = phone;
+            feed.innerHTML = ''; // Clean feed
 
             try {
-                // Determine API URL (Local vs Prod)
-                const apiUrl = '/api/make-call';
+                // Connect via WebRTC
+                // We pass the phone number as a parameter to the TwiML app
+                const params = {
+                    To: phone
+                };
 
-                const res = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ to: phone })
-                });
+                console.log('Dialing ' + phone + '...');
+                device.connect(params);
 
-                const data = await res.json();
-                if (data.success) {
-                    callSid = data.callSid;
-                    statusText.innerText = "בשיחה";
-                    startTimer();
-                    connectWS(callSid);
-                } else {
-                    throw new Error(data.error || 'Failed');
-                }
             } catch (e) {
                 console.error(e);
                 statusText.innerText = "שגיאה בחיוג";
@@ -339,16 +401,15 @@
         }
 
         async function hangup() {
-            if (callSid) {
-                statusText.innerText = "מנתק...";
-                await fetch('/api/end-call', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ callSid })
-                });
+            if (activeConnection) {
+                activeConnection.disconnect();
+            } else if (device) {
+                device.disconnectAll();
             }
+
             setCallState(false);
-            window.location.href = '/summary.html';
+            // Optional: Redirect to summary only if a real call happened
+            // window.location.href = '/summary.html'; 
         }
 
         function setCallState(active) {
