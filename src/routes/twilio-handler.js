@@ -226,11 +226,20 @@ async function registerTwilioRoutes(fastify) {
             // 1. Update State & Broadcast to UI (Transcript)
             CallManager.addTranscript(callSid, role, text, isFinal);
 
+            // Broadcast to UI for real-time display
+            CallManager.broadcastToFrontend(callSid, {
+                type: 'transcript',
+                role: role,
+                text: text,
+                isFinal: isFinal,
+                timestamp: Date.now()
+            });
+
             // 2. Trigger Coaching Logic
             // --- CRITICAL: TRIGGER CONDITIONS ---
             // a) Must be FINAL
-            // b) Must be CUSTOMER (inbound)
-            if (isFinal && role === 'inbound') {
+            // b) Must be CUSTOMER (inbound audio mapped to 'customer' role)
+            if (isFinal && role === 'customer') {
                 const call = CallManager.getCall(callSid);
                 const account = TenantStore.getAccount(call.accountId);
 
