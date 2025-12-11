@@ -2,46 +2,68 @@
 <html lang="he" dir="rtl">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Coach AI - Dashboard</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Heebo:wght@300;400;500;700;800&display=swap"
-        rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SalesFlow AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        background: '#09090b',
-                        surface: '#18181b',
-                        surfaceHighlight: '#27272a',
-                        primary: '#3b82f6',
-                        primaryGlow: 'rgba(59, 130, 246, 0.5)',
-                        accent: '#8b5cf6',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444',
-                        textMain: '#fafafa',
-                        textMuted: '#a1a1aa'
-                    },
                     fontFamily: {
-                        sans: ['Heebo', 'Outfit', 'sans-serif'],
+                        sans: ['Heebo', 'Inter', 'sans-serif'],
+                        mono: ['Inter', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                            950: '#1e1b4b',
+                        },
+                        surface: '#18181b', // Dark surface
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
                     }
                 }
             }
-    </script>
-    <style>
-        body {
-            background-color: #09090b;
-            color: #fafafa;
-            height: 100vh;
-            overflow: hidden;
         }
+    </script>
 
+    <style>
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
+            height: 6px;
         }
 
         ::-webkit-scrollbar-track {
@@ -49,104 +71,31 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #27272a;
-            border-radius: 3px;
+            background: #cbd5e1;
+            border-radius: 10px;
         }
 
-        .glass-panel {
-            background: rgba(24, 24, 27, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
         }
 
-        .animate-pulse-slow {
-            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        body {
+            background-color: #f8fafc;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.03) 0px, transparent 50%);
+            background-attachment: fixed;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: .5;
-            }
-        }
-
-        .typing-dot {
-            animation: typing 1.4s infinite ease-in-out both;
-        }
-
-        .typing-dot:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes typing {
-
-            0%,
-            80%,
-            100% {
-                transform: scale(0);
-            }
-
-            40% {
-                transform: scale(1);
-            }
-        }
-
-        /* SCROLLABLE TRANSCRIPT AREA - REFACTORED */
-        #transcript-panel {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            /* Occupy remaining space */
-            min-height: 0;
-            /* Critical for flex scrolling */
-            width: 100%;
-            position: relative;
-        }
-
-        #transcript-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 16px 80px;
-            /* Extra padding at bottom for input area */
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            scroll-behavior: smooth;
-        }
-
+        /* Transcript Styles */
         .transcript-message {
             display: flex;
             flex-direction: column;
-            max-width: 80%;
+            max-width: 85%;
+            margin-bottom: 1rem;
             position: relative;
-            transition: all 0.2s ease-out;
-            flex-shrink: 0;
-            /* Prevent shrinking */
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .transcript-message.new {
             animation: fadeIn 0.3s forwards;
         }
 
@@ -154,58 +103,37 @@
             align-self: flex-start;
         }
 
-        /* Agent (Right in RTL) -> Flex Start */
+        /* Right in RTL */
         .transcript-message.customer {
             align-self: flex-end;
         }
 
-        /* Customer (Left in RTL) -> Flex End */
-
-        .transcript-label {
-            font-size: 0.7rem;
-            /* text-xs */
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .transcript-message.agent .transcript-label {
-            color: #a1a1aa;
-            /* textMuted */
-        }
-
-        .transcript-message.customer .transcript-label {
-            color: #3b82f6;
-            /* primary */
-        }
+        /* Left in RTL */
 
         .transcript-bubble {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             border-radius: 1rem;
-            font-size: 0.875rem;
-            /* text-sm */
-            line-height: 1.6;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
-        /* Agent Bubble (Right) */
+        /* Agent Bubble */
         .transcript-message.agent .transcript-bubble {
-            background-color: #27272a;
-            /* surfaceHighlight */
-            color: #fafafa;
+            background-color: #f1f5f9;
+            /* Slate-100 */
+            color: #334155;
+            /* Slate-700 */
             border-top-right-radius: 0.25rem;
         }
 
-        /* Customer Bubble (Left) */
+        /* Customer Bubble */
         .transcript-message.customer .transcript-bubble {
-            background-color: rgba(59, 130, 246, 0.15);
-            /* primary/15 */
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            color: #fafafa;
+            background-color: #eef2ff;
+            /* Brand-50 */
+            color: #3730a3;
+            /* Brand-800 */
+            border: 1px solid #e0e7ff;
             border-top-left-radius: 0.25rem;
         }
 
@@ -214,202 +142,310 @@
             border-style: dashed;
         }
 
-        /* Personal Note (Center) */
-        .transcript-message.note {
-            align-self: center;
-            max-width: 90%;
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .transcript-message.note .transcript-bubble {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #fbbf24;
-            /* amber-400 */
-            font-style: italic;
-            text-align: center;
-            border: 1px dashed rgba(251, 191, 36, 0.3);
-            padding: 0.75rem 1.5rem;
-            font-size: 0.8rem;
-        }
-
-        /* STAGES / PROGRESS BAR */
-        .stage-step.active {
-            opacity: 1;
-        }
-
         .stage-step.active .step-dot {
-            background-color: #09090b;
-            /* surface */
-            border-color: #3b82f6;
-            /* primary */
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-            transform: scale(1.1);
+            background-color: #4f46e5;
+            /* brand-600 */
+            color: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
         }
 
-        .stage-step.active .step-glow {
-            opacity: 0.3;
-            animation: ping-slow 2s infinite;
-        }
-
-        .stage-step.completed {
-            opacity: 1;
+        .stage-step.active .step-label {
+            color: #4338ca;
+            /* brand-700 */
+            font-weight: 700;
         }
 
         .stage-step.completed .step-dot {
-            background-color: #3b82f6;
-            /* primary */
-            border-color: #3b82f6;
+            background-color: #e0e7ff;
+            /* brand-100 */
+            color: #4f46e5;
+            /* brand-600 */
         }
 
-        @keyframes ping-slow {
+        /* Active Insight Card Flash */
+        @keyframes flashBorder {
             0% {
-                transform: scale(1);
-                opacity: 0.4;
+                border-color: rgba(99, 102, 241, 0);
+            }
+
+            50% {
+                border-color: rgba(99, 102, 241, 1);
             }
 
             100% {
-                transform: scale(2.5);
-                opacity: 0;
+                border-color: rgba(99, 102, 241, 0);
             }
         }
 
-        /* CUSTOM SCROLLBAR FOR LEFT PANEL */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
+        .flash-border {
+            animation: flashBorder 1s ease-out;
         }
     </style>
 </head>
 
-<body class="flex flex-col">
+<body class="flex flex-col h-screen text-slate-900 font-sans">
 
-    <!-- Navbar -->
-    <nav class="h-16 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center justify-between px-6 relative"
-        style="z-index: 100;">
-        <div class="flex items-center gap-3">
-            <div
-                class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-lg">
-                S</div>
-            <span class="font-bold text-lg tracking-tight">Sales<span class="text-primary">Coach</span></span>
-        </div>
+    <!-- Top Bar -->
+    <div class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
         <div class="flex items-center gap-4">
-            <div
-                class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surfaceHighlight border border-white/5 text-sm text-green-400">
-                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                <span>מחובר (Online)</span>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">SF
+                </div>
+                <h1
+                    class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-purple-600">
+                    SalesFlow AI</h1>
             </div>
-            <button id="btn-settings" onclick="openHealthCheck()" type="button"
-                class="w-8 h-8 rounded-full bg-surfaceHighlight flex items-center justify-center hover:bg-white/10 transition cursor-pointer relative"
-                style="z-index: 101;">⚙️</button>
+            <div class="h-6 w-px bg-slate-200 mx-2"></div>
+            <span class="text-sm font-medium text-slate-500">Live Monitor</span>
         </div>
-    </nav>
 
-    <!-- Health Check Modal -->
-    <div id="health-modal"
-        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
-        <div class="bg-surface border border-white/10 rounded-2xl p-6 w-96 max-w-[90vw]">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">בריאות המערכת</h2>
-                <button onclick="closeHealthCheck()" class="text-textMuted hover:text-white">✕</button>
-            </div>
-
-            <div id="health-content" class="space-y-4">
-                <div class="text-center py-8 text-textMuted">
-                    <div class="animate-spin text-2xl mb-2">⏳</div>
-                    בודק מערכות...
+        <div class="flex items-center gap-4">
+            <!-- Health Check Button -->
+            <button id="btn-settings" onclick="openHealthCheck()"
+                class="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-full transition-colors"
+                title="בדיקת מערכות">
+                <i data-lucide="activity" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+                <div
+                    class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-medium text-xs">
+                    OZ</div>
+                <div class="text-sm">
+                    <div class="font-bold text-slate-700">עומר זנו</div>
+                    <div class="text-[10px] text-slate-500">Sales Manager</div>
                 </div>
             </div>
-
-            <button onclick="openHealthCheck()"
-                class="mt-6 w-full py-2 bg-surfaceHighlight rounded-lg text-sm hover:bg-white/10 transition">
-                רענן
-            </button>
         </div>
     </div>
 
-    <!-- Main Grid -->
-    <main class="flex-1 grid grid-cols-12 gap-0 overflow-hidden">
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden">
 
-        <!-- LEFT COLUMN: Controls & Analysis (3 Columns) -->
-        <aside class="col-span-3 border-l border-white/5 bg-surface/30 flex flex-col overflow-hidden">
+        <!-- RIGHT PANEL: Call Status & Controls (Col 1) -->
+        <aside class="w-80 flex flex-col border-e border-slate-200 bg-white overflow-y-auto">
 
-            <!-- 1. Dialer Section -->
-            <div class="p-6 border-b border-white/5">
-                <div class="bg-surfaceHighlight/50 p-1 rounded-2xl border border-white/5 mb-4 shadow-inner">
-                    <input type="tel" id="phone-input"
-                        class="w-full bg-transparent text-center text-2xl font-mono py-4 focus:outline-none text-white tracking-widest placeholder-white/10 font-bold"
-                        placeholder="050-000-0000">
-                </div>
+            <!-- Dialer Section (Injected into new design) -->
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="phone" class="w-3 h-3"></i> חייגן
+                </h3>
 
-                <div class="grid grid-cols-2 gap-3 mb-2">
-                    <button onclick="startCall()" id="btn-call"
-                        class="col-span-2 py-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all transform active:scale-95 text-lg">
-                        <span>📞</span> חייג
-                    </button>
-                    <button onclick="hangup()" id="btn-hangup"
-                        class="col-span-2 hidden py-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all text-lg">
-                        <span>⛔</span> נתק
-                    </button>
-                </div>
-                <div id="call-status-text" class="text-center text-xs text-textMuted h-4 font-medium tracking-wide">מוכן
+                <div class="space-y-3">
+                    <div class="relative">
+                        <input type="tel" id="phone-input" placeholder="הכנס מספר טלפון..."
+                            class="w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm transition-all text-left"
+                            dir="ltr" />
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                            <i data-lucide="keypad" class="w-4 h-4"></i>
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-call"
+                            class="flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl transition-all shadow-sm shadow-brand-200 font-medium">
+                            <i data-lucide="phone-call" class="w-4 h-4"></i>
+                            <span>חייג</span>
+                        </button>
+                        <button id="btn-hangup"
+                            class="hidden flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white py-2.5 rounded-xl transition-all shadow-sm shadow-rose-200 font-medium">
+                            <i data-lucide="phone-off" class="w-4 h-4"></i>
+                            <span>נתק</span>
+                        </button>
+                    </div>
+
+                    <div id="call-status-text" class="text-xs text-center text-slate-400 h-4">מוכן לשיחה</div>
                 </div>
             </div>
 
-            <!-- 2. Live Analysis (Score & Insight) -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <!-- Lead Info Header -->
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex justify-between items-start mb-3">
+                    <div
+                        class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-500">
+                        M</div>
+                    <div
+                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                        WARM</div>
+                </div>
+                <h2 class="text-base font-bold text-slate-900 mb-1" id="active-contact">מיכאל רוס</h2>
+                <div class="flex items-center text-sm text-slate-500 mb-3">
+                    <i data-lucide="building-2" class="w-3.5 h-3.5 ml-1.5"></i>
+                    Acme Corp Ltd.
+                </div>
+            </div>
 
-                <!-- Score Ring Container -->
-                <div class="p-6 pb-2 text-center relative">
-                    <h3 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-4 opacity-70">ציון איכות
-                        שיחה</h3>
-                    <div class="relative w-40 h-40 mx-auto mb-4">
-                        <svg class="w-full h-full transform -rotate-90 filter drop-shadow-2xl">
-                            <circle cx="50%" cy="50%" r="45%" stroke="#27272a" stroke-width="8" fill="transparent" />
-                            <circle cx="50%" cy="50%" r="45%" stroke="currentColor" stroke-width="8" fill="transparent"
-                                class="text-primary stroke-dasharray-350 stroke-dashoffset-100 transition-all duration-1000"
-                                id="score-ring" stroke-linecap="round" />
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span class="text-5xl font-black tracking-tighter" id="score-val">--</span>
+            <!-- Stages Stepper -->
+            <div class="p-6 flex-1 overflow-y-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">מהלך השיחה</h3>
+                    <span id="call-timer" class="text-[10px] text-slate-400 font-mono">00:00</span>
+                </div>
+
+                <div class="relative space-y-0 text-sm">
+                    <!-- Stage Item: Opening -->
+                    <div class="stage-step relative flex gap-4 pb-8 group min-h-[3rem]" data-stage="Opening">
+                        <div class="absolute right-[9px] top-6 bottom-0 w-px bg-slate-100"></div>
+                        <div
+                            class="step-dot relative z-10 w-5 h-5 rounded-full bg-white border border-slate-200 text-slate-300 flex items-center justify-center flex-shrink-0 transition-all mt-0.5">
+                            <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                        </div>
+                        <div class="flex flex-col pt-0.5">
+                            <span
+                                class="step-label text-slate-700 font-medium leading-none transition-colors">פתיחה</span>
+                        </div>
+                    </div>
+
+                    <!-- Stage Item: Discovery -->
+                    <div class="stage-step relative flex gap-4 pb-8 group min-h-[3rem]" data-stage="Discovery">
+                        <div class="absolute right-[9px] top-6 bottom-0 w-px bg-slate-100"></div>
+                        <div
+                            class="step-dot relative z-10 w-5 h-5 rounded-full bg-white border border-slate-200 text-slate-300 flex items-center justify-center flex-shrink-0 transition-all mt-0.5">
+                            <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                        </div>
+                        <div class="flex flex-col pt-0.5">
+                            <span class="step-label text-slate-700 font-medium leading-none transition-colors">גילוי
+                                צרכים</span>
+                        </div>
+                    </div>
+
+                    <!-- Stage Item: Solution -->
+                    <div class="stage-step relative flex gap-4 pb-8 group min-h-[3rem]" data-stage="Solution">
+                        <div class="absolute right-[9px] top-6 bottom-0 w-px bg-slate-100"></div>
+                        <div
+                            class="step-dot relative z-10 w-5 h-5 rounded-full bg-white border border-slate-200 text-slate-300 flex items-center justify-center flex-shrink-0 transition-all mt-0.5">
+                            <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                        </div>
+                        <div class="flex flex-col pt-0.5">
+                            <span class="step-label text-slate-700 font-medium leading-none transition-colors">הצגת
+                                פתרון</span>
+                        </div>
+                    </div>
+
+                    <!-- Stage Item: Objections -->
+                    <div class="stage-step relative flex gap-4 pb-8 group min-h-[3rem]" data-stage="Objections">
+                        <div class="absolute right-[9px] top-6 bottom-0 w-px bg-slate-100"></div>
+                        <div
+                            class="step-dot relative z-10 w-5 h-5 rounded-full bg-white border border-slate-200 text-slate-300 flex items-center justify-center flex-shrink-0 transition-all mt-0.5">
+                            <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                        </div>
+                        <div class="flex flex-col pt-0.5">
+                            <span class="step-label text-slate-700 font-medium leading-none transition-colors">טיפול
+                                בהתנגדויות</span>
+                        </div>
+                    </div>
+
+                    <!-- Stage Item: Closing -->
+                    <div class="stage-step relative flex gap-4 group min-h-[3rem]" data-stage="Closing">
+                        <div
+                            class="step-dot relative z-10 w-5 h-5 rounded-full bg-white border border-slate-200 text-slate-300 flex items-center justify-center flex-shrink-0 transition-all mt-0.5">
+                            <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                        </div>
+                        <div class="flex flex-col pt-0.5">
+                            <span
+                                class="step-label text-slate-700 font-medium leading-none transition-colors">סגירה</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Footer -->
+            <div class="p-6 border-t border-slate-100 bg-slate-50/50 space-y-5">
+                <!-- Score -->
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-semibold text-slate-500">ציון איכות שיחה</span>
+                        <div class="flex items-center gap-1">
+                            <span id="score-val" class="text-sm font-bold text-slate-900">0</span>
+                            <span class="text-[10px] text-slate-400">/ 100</span>
+                        </div>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                        <div id="score-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER PANEL: Chat & Active Call (Col 2) -->
+        <main class="flex-1 flex flex-col items-stretch relative min-w-0 bg-white">
+
+            <!-- Transcript Feed -->
+            <div id="transcript-scroll" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4 scroll-smooth">
+                <!-- Messages will be injected here -->
+                <div class="text-center py-10 text-slate-300 text-sm">
+                    השיחה תופיע כאן...
+                </div>
+            </div>
+
+            <!-- Manual Input Area -->
+            <div class="border-t border-slate-200 p-4 bg-slate-50 z-10">
+                <div class="relative max-w-3xl mx-auto w-full">
+                    <input type="text" id="note-input" placeholder="הוסף הערה אישית..."
+                        class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm" />
+                    <button
+                        class="absolute left-1.5 top-1/2 -translate-y-1/2 p-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-sm">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- LEFT PANEL: Insights (Col 3) -->
+        <aside class="w-80 flex flex-col border-s border-slate-200 bg-slate-50 hidden xl:flex">
+            <div class="p-5 border-b border-slate-200 bg-white sticky top-0 z-10">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-brand-600"></i>
+                    מרכז בינה
+                </h2>
+            </div>
+
+            <div class="p-5 space-y-6 flex-1 overflow-y-auto">
+
+                <!-- AI Insight Card -->
+                <div id="ai-insight-card"
+                    class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300">
+                    <div
+                        class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-3 h-3 text-brand-500"></i>
+                            טיפ חכם
+                        </h3>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    </div>
+
+                    <div class="p-4 space-y-3">
+                        <div id="insight-text" class="text-sm font-bold text-slate-800 leading-snug">
+                            ממתין לתובנות ראשוניות...
+                        </div>
+
+                        <div id="insight-suggestion"
+                            class="hidden text-xs text-slate-600 bg-brand-50 p-2.5 rounded-lg border border-brand-100 italic">
+                            "משפט מומלץ יופיע כאן"
                         </div>
                     </div>
                 </div>
 
-                <!-- AI Insight Card -->
-                <div class="px-6 pb-6">
-                    <div id="ai-insight-card"
-                        class="glass-panel p-5 rounded-2xl relative overflow-hidden group transition-all duration-300 border border-white/10 bg-gradient-to-br from-surface to-surfaceHighlight/50">
+                <!-- Helper Actions -->
+                <div>
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="check-square" class="w-3.5 h-3.5"></i> רשימת בדיקה
+                        </h3>
+                    </div>
+
+                    <div class="space-y-2">
                         <div
-                            class="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-primary to-accent opacity-80">
+                            class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 text-xs text-slate-600">
+                            <i data-lucide="circle" class="w-3 h-3 text-slate-300"></i> בניית כימיה ראשונית
                         </div>
-
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="p-1.5 bg-primary/10 rounded-lg">
-                                <span class="text-lg">💡</span>
-                            </div>
-                            <span class="font-bold text-sm text-primary uppercase tracking-wide">קואוצ'ר AI</span>
+                        <div
+                            class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 text-xs text-slate-600">
+                            <i data-lucide="circle" class="w-3 h-3 text-slate-300"></i> זיהוי תקציב לקוח
                         </div>
-
-                        <div id="insight-text" class="font-medium text-lg leading-relaxed mb-4 text-white/90">
-                            ממתין לתחילת השיחה...
-                        </div>
-
-                        <div id="insight-suggestion"
-                            class="hidden text-sm text-textMuted bg-black/20 p-3 rounded-lg border-r-2 border-primary/50 italic leading-relaxed">
-
+                        <div
+                            class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 text-xs text-slate-600">
+                            <i data-lucide="circle" class="w-3 h-3 text-slate-300"></i> הצגת יתרונות המוצר
                         </div>
                     </div>
                 </div>
@@ -417,376 +453,176 @@
             </div>
         </aside>
 
-        <!-- RIGHT COLUMN: Chat & Stages (9 Columns) -->
-        <div class="col-span-9 flex flex-col bg-background relative h-full overflow-hidden">
+    </div>
 
-            <!-- Top Bar: Header + Stages -->
-            <div class="border-b border-white/5 bg-surface/20 backdrop-blur z-20 flex flex-col">
-
-                <!-- Info Row -->
-                <div class="h-12 flex items-center justify-between px-6 border-b border-white/5">
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-primary/50"></span>
-                            <span class="text-sm font-medium text-textMuted">לקוח:</span>
-                            <span id="active-contact" class="font-mono font-bold tracking-wide text-white">--</span>
-                        </div>
-                    </div>
-                    <div id="call-timer" class="font-mono text-xl text-primary font-bold opacity-0 transition-opacity">
-                        00:00</div>
-                </div>
-
-                <!-- STAGES PROGRESS BAR -->
-                <div class="px-8 py-4 bg-surface/30">
-                    <div class="flex justify-between items-center relative gap-4">
-                        <!-- Progress Line Background -->
-                        <div class="absolute top-1/2 left-0 w-full h-1 bg-white/5 -z-10 rounded-full"></div>
-
-                        <!-- Stage Items -->
-                        <div class="stage-step relative flex flex-col items-center gap-2 z-10 opacity-40 transition-all duration-300"
-                            data-stage="פתיחה">
-                            <div
-                                class="w-4 h-4 rounded-full bg-surface border-2 border-textMuted relative step-dot transition-all">
-                                <div
-                                    class="absolute inset-0 bg-primary opacity-0 rounded-full transition-all step-glow">
-                                </div>
-                            </div>
-                            <span class="text-xs font-bold whitespace-nowrap">פתיחה וחיבור</span>
-                        </div>
-
-                        <div class="stage-step relative flex flex-col items-center gap-2 z-10 opacity-40 transition-all duration-300"
-                            data-stage="גילוי צרכים">
-                            <div
-                                class="w-4 h-4 rounded-full bg-surface border-2 border-textMuted relative step-dot transition-all">
-                            </div>
-                            <span class="text-xs font-bold whitespace-nowrap">גילוי צרכים</span>
-                        </div>
-
-                        <div class="stage-step relative flex flex-col items-center gap-2 z-10 opacity-40 transition-all duration-300"
-                            data-stage="הצגת פתרון">
-                            <div
-                                class="w-4 h-4 rounded-full bg-surface border-2 border-textMuted relative step-dot transition-all">
-                            </div>
-                            <span class="text-xs font-bold whitespace-nowrap">הצגת פתרון</span>
-                        </div>
-
-                        <div class="stage-step relative flex flex-col items-center gap-2 z-10 opacity-40 transition-all duration-300"
-                            data-stage="הצגת מחיר">
-                            <div
-                                class="w-4 h-4 rounded-full bg-surface border-2 border-textMuted relative step-dot transition-all">
-                            </div>
-                            <span class="text-xs font-bold whitespace-nowrap">הצגת מחיר</span>
-                        </div>
-
-                        <div class="stage-step relative flex flex-col items-center gap-2 z-10 opacity-40 transition-all duration-300"
-                            data-stage="התנגדויות">
-                            <div
-                                class="w-4 h-4 rounded-full bg-surface border-2 border-textMuted relative step-dot transition-all">
-                            </div>
-                            <span class="text-xs font-bold whitespace-nowrap">טיפול בהתנגדויות</span>
-                        </div>
-
-                        <div class="stage-step relative flex flex-col items-center gap-2 z-10 opacity-40 transition-all duration-300"
-                            data-stage="סגירה">
-                            <div
-                                class="w-4 h-4 rounded-full bg-surface border-2 border-textMuted relative step-dot transition-all">
-                            </div>
-                            <span class="text-xs font-bold whitespace-nowrap">סגירה</span>
-                        </div>
-                    </div>
-                </div>
+    <!-- Health Check Modal -->
+    <div id="health-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+        <div
+            class="bg-white rounded-2xl w-96 shadow-2xl border border-slate-200 overflow-hidden transform transition-all scale-100 p-0">
+            <div class="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="activity" class="w-4 h-4 text-brand-600"></i> בדיקת מערכות
+                </h3>
+                <button onclick="closeHealthCheck()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
-
-            <!-- Chat Feed -->
-            <div id="transcript-panel">
-                <div id="transcript-scroll" class="transcript-scroll scroll-smooth">
-                    <div class="text-center py-20 opacity-30" id="empty-state">
-                        <div class="text-6xl mb-4 grayscale">💬</div>
-                        <div class="text-lg font-light">התמלול יופיע כאן בזמן אמת</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Input Area -->
-            <div class="p-6 border-t border-white/5 bg-surface/60 backdrop-blur absolute bottom-0 w-full z-30">
-                <div class="relative max-w-4xl mx-auto">
-                    <input type="text" id="note-input"
-                        class="w-full bg-surfaceHighlight border border-white/10 rounded-xl px-4 py-4 pl-12 focus:outline-none focus:border-primary/50 transition placeholder-textMuted shadow-lg"
-                        placeholder="הוסף הערה אישית או סיכום...">
-                    <span
-                        class="absolute left-4 top-4 text-textMuted text-xs font-mono border border-white/10 px-1.5 py-0.5 rounded">↵
-                        ENTER</span>
-                </div>
+            <div id="health-content" class="p-6">
+                <!-- Content injected via JS -->
             </div>
         </div>
+    </div>
 
-    </main>
+    <!-- LIBRARIES -->
+    <script src="https://sdk.twilio.com/js/client/v1.14/twilio.min.js"></script>
 
-    <script>console.log('Attempting to load Twilio SDK...');</script>
-    <!-- Twilio Voice SDK v2.11.1 (via jsDelivr) -->
-    <script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.11.1/dist/twilio.min.js"
-        onload="console.log('Twilio Voice SDK Loaded')" onerror="handleSdkLoadError()"></script>
+    <!-- INITIALIZE LUCIDE -->
     <script>
-            function handleSdkLoadError() {
-            const statusText = document.getElementById('call-status-text');
-            console.error('Twilio SDK Load Failed (Network/Block).');
-            statusText.innerText = 'שגיאה: טעינת רכיב השיחה נכשלה. נסה לרענן.';
-            statusText.classList.add('text-red-500');
-
-            // Optional: Create a retry button
-            const container = statusText.parentElement;
-            if (!document.getElementById('retry-sdk-btn')) {
-                const retryBtn = document.createElement('button');
-                retryBtn.id = 'retry-sdk-btn';
-                retryBtn.innerText = 'נסה שוב';
-                retryBtn.className = 'mt-2 px-3 py-1 bg-white/10 rounded text-xs hover:bg-white/20 transition';
-                retryBtn.onclick = () => window.location.reload();
-                container.appendChild(retryBtn);
-            }
-        }
+        lucide.createIcons();
     </script>
-    <script>
-        // State
-        let isCallActive = false;
-        let callTimer = null;
-        let seconds = 0;
-        let ws = null;
-        let activeConnection = null;
-        let device = null;
-        let callSid = null; // Will be set from Twilio Connection
 
+    <!-- APPLICATION LOGIC -->
+    <script>
+        // --- GLOBAL VARIABLES ---
+        let device;
+        let activeCall = null;
+        let isCallActive = false;
+        let ws;
+        let callStartTime;
+        let timerInterval;
+
+        // --- DOM ELEMENTS logic mapping ---
         const btnCall = document.getElementById('btn-call');
         const btnHangup = document.getElementById('btn-hangup');
-        const inputPhone = document.getElementById('phone-input');
+        const phoneInput = document.getElementById('phone-input');
         const statusText = document.getElementById('call-status-text');
-        const timerDisplay = document.getElementById('call-timer');
-        const activeContact = document.getElementById('active-contact');
-        const feed = document.getElementById('transcript-feed');
+        const feed = document.getElementById('transcript-scroll');
+        const timerEl = document.getElementById('call-timer');
 
-        // --- INIT DEVICE ON LOAD ---
-        async function initDevice() {
+        // --- TWILIO SETUP ---
+        async function initTwilio() {
             try {
-                console.log('Fetching token from /api/token...');
-                statusText.innerText = "טוען חיבור לטלפון...";
+                const response = await fetch('/token');
+                const data = await response.json();
 
-                const res = await fetch('/api/token');
-                if (!res.ok) throw new Error(`Token fetch failed: ${res.status} ${res.statusText}`);
-
-                const data = await res.json();
-                console.log('Token received:', data);
-
-                // Twilio Voice SDK v2 Initialization
-                // Note: The global might be Twilio.Device or Twilio.Voice.Device depending on the bundle.
-                // The CDN usually exposes Twilio.Device directly or via Twilio.Voice.
-                const Device = Twilio.Device;
-
-                device = new Device(data.token, {
+                device = new Twilio.Device(data.token, {
                     codecPreferences: ['opus', 'pcmu'],
-                    // fakeLocalDTMF, enableRingingState are v1 legacy options - removed
-                    debug: true,
-                    // v2 specific options can go here
+                    fakeLocalDTMF: true,
+                    enableRingingState: true
                 });
 
-                // Register the device for incoming calls
-                device.register();
-
-                device.on('registered', function () {
-                    console.log('Twilio.Device Ready (Registered)!');
-                    statusText.innerText = "מוכן לשיחה (Voice SDK v2)";
-                    statusText.classList.remove('text-red-500');
-                    statusText.classList.add('text-green-400');
+                device.on('ready', () => updateStatus('מוכן לשיחה', 'ready'));
+                device.on('error', (error) => {
+                    console.error('Twilio Error:', error);
+                    updateStatus('שגיאה: ' + error.message, 'error');
                 });
 
-                device.on('error', function (error) {
-                    console.error('Twilio.Device Error:', error);
-                    // Ignore some harmless errors or handle them
-                    if (error.code === 31205) return; // Keep alive error, ignore
-                    statusText.innerText = "שגיאה: " + error.message;
-                    statusText.classList.add('text-red-500');
+                device.on('connect', (conn) => {
+                    activeCall = conn;
+                    isCallActive = true;
+                    startTimer();
+                    updateStatus('בשיחה', 'active');
+                    toggleButtons(true);
+
+                    // Setup WebSocket for transcript
+                    setupWebSocket(conn.parameters.CallSid);
                 });
 
-                // In v2, 'connect' event on device is for unexpected connections? 
-                // Usually we handle outgoing via the promise, and incoming via 'incoming' event.
-                // We'll leave this empty or use it for debugging.
+                device.on('disconnect', () => {
+                    activeCall = null;
+                    isCallActive = false;
+                    stopTimer();
+                    updateStatus('שיחה הסתיימה', 'ready');
+                    toggleButtons(false);
+
+                    // Trigger Summary
+                    window.location.href = '/summary.html';
+                });
 
             } catch (err) {
-                console.error('CRITICAL Error during Device init:', err);
-                statusText.innerText = "שגיאת אתחול: " + err.message;
-                statusText.classList.add('text-red-500');
+                console.error('Token Error:', err);
+                updateStatus('שגיאה בהתחברות', 'error');
             }
         }
 
-        // --- INIT DEVICE ON LOAD ---
-        window.addEventListener('load', () => {
-            // Check if we are blocked
-            if (statusText.innerText.includes('AdBlock')) return;
-
-            // Start polling for the SDK
-            waitForTwilio();
-        });
-
-        function waitForTwilio(attempts = 0) {
-            if (typeof Twilio !== 'undefined') {
-                console.log('Twilio global found. Initializing...');
-                initDevice();
-                return;
-            }
-
-            if (attempts > 50) { // 5 seconds (50 * 100ms)
-                console.error('Twilio SDK load timed out.');
-                statusText.innerText = "שגיאה: טעינת הרכיבים איטית מדי. נסה לרענן.";
-                statusText.classList.add('text-red-500');
-                // Allow a manual retry button here too if needed
-                handleSdkLoadError(); // re-use error handler to show retry
-                return;
-            }
-
-            if (attempts % 10 === 0) {
-                // Update UI every second
-                if (!statusText.innerText.includes('שגיאה')) {
-                    statusText.innerText = `טוען רכיבים... (${Math.floor(attempts / 10)})`;
-                }
-            }
-
-            setTimeout(() => waitForTwilio(attempts + 1), 100);
+        function updateStatus(text, type) {
+            statusText.textContent = text;
+            statusText.className = 'text-xs text-center h-4 ' +
+                (type === 'error' ? 'text-red-500' :
+                    type === 'active' ? 'text-emerald-500 font-bold' :
+                        'text-slate-400');
         }
 
-        // Functions
-        async function startCall() {
-            const phone = inputPhone.value;
-            if (!phone) {
-                inputPhone.classList.add('border-red-500');
-                setTimeout(() => inputPhone.classList.remove('border-red-500'), 2000);
-                return;
-            }
-
-            if (!device) {
-                alert('Device not initialized yet. Please wait.');
-                return;
-            }
-
-            statusText.innerText = "מתקשר...";
-            activeContact.innerText = phone;
-            // feed.innerHTML = ''; // Clean feed - This line is removed as per the refactor, transcript-scroll is now the feed.
-
-            try {
-                // Connect via WebRTC (v2)
-                // device.connect() returns a Promise resolving to a Call object
-                const params = {
-                    target_number: phone
-                };
-
-                console.log('Dialing ' + phone + '...');
-                const call = await device.connect({ params: params });
-
-                // Setup Call Listeners
-                call.on('accept', () => {
-                    console.log('Call accepted');
-                    statusText.innerText = "בשיחה";
-                    activeConnection = call;
-                    // v2: call.parameters.CallSid contains the Sid
-                    callSid = call.parameters.CallSid;
-                    setCallState(true);
-                    startTimer();
-                    connectWS(callSid);
-                });
-
-                call.on('disconnect', () => {
-                    console.log('Call disconnected');
-                    statusText.innerText = "השיחה הסתיימה";
-                    activeConnection = null;
-                    hangup();
-                });
-
-                call.on('error', (err) => {
-                    console.error('Call Error:', err);
-                    statusText.innerText = "שגיאה בשיחה";
-                });
-
-            } catch (e) {
-                console.error('Connection failed:', e);
-                statusText.innerText = "שגיאה בחיוג: " + e.message;
-                setTimeout(() => setCallState(false), 2000);
-            }
-        }
-
-        async function hangup() {
-            if (activeConnection) {
-                activeConnection.disconnect();
-            } else if (device) {
-                device.disconnectAll();
-            }
-
-            setCallState(false);
-            // Optional: Redirect to summary only if a real call happened
-            // window.location.href = '/summary.html'; 
-        }
-
-        function setCallState(active) {
-            isCallActive = active;
-            if (active) {
+        function toggleButtons(isActive) {
+            if (isActive) {
                 btnCall.classList.add('hidden');
                 btnHangup.classList.remove('hidden');
-                timerDisplay.classList.remove('opacity-0');
             } else {
                 btnCall.classList.remove('hidden');
                 btnHangup.classList.add('hidden');
-                timerDisplay.classList.add('opacity-0');
-                clearInterval(callTimer);
-                seconds = 0;
             }
         }
 
+        // --- TIMER ---
         function startTimer() {
-            clearInterval(callTimer);
-            callTimer = setInterval(() => {
-                seconds++;
-                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                const s = (seconds % 60).toString().padStart(2, '0');
-                timerDisplay.innerText = `${m}:${s}`;
+            callStartTime = Date.now();
+            timerInterval = setInterval(() => {
+                const delta = Math.floor((Date.now() - callStartTime) / 1000);
+                const m = Math.floor(delta / 60).toString().padStart(2, '0');
+                const s = (delta % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${m}:${s}`;
             }, 1000);
         }
 
-        function connectWS(sid) {
-            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${proto}//${location.host}/ws/coach?callSid=${sid}`);
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerEl.textContent = '00:00';
+        }
+
+        // --- WEBSOCKET ---
+        function setupWebSocket(callSid) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/client-socket`);
+
+            ws.onopen = () => {
+                console.log('WS Connected');
+                ws.send(JSON.stringify({ type: 'register', callSid: callSid }));
+            };
 
             ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                console.log('[WS] Received:', data.type, data);
-                if (data.type === 'transcript') addTranscriptItem(data);
-                if (data.type === 'coaching') updateInsight(data);
-                if (data.type === 'call_summary') {
-                    console.log('Call Summary Received:', data.data);
-                    sessionStorage.setItem('lastCallSummary', JSON.stringify(data.data));
-                    window.location.href = '/summary.html';
+                const msg = JSON.parse(event.data);
+
+                if (msg.type === 'transcript') {
+                    addTranscriptItem({
+                        role: msg.role,
+                        text: msg.text,
+                        isFinal: msg.isFinal
+                    });
+                } else if (msg.type === 'coaching') {
+                    updateInsight(msg.data);
+                } else if (msg.type === 'call_summary') {
+                    sessionStorage.setItem('lastCallSummary', JSON.stringify(msg.data));
                 }
             };
         }
 
-        // Transcript Logic
+        // --- ACTIONS ---
+        btnCall.addEventListener('click', () => {
+            const number = phoneInput.value;
+            if (!number) return alert('נא להזני מספר טלפון');
 
+            updateStatus('מחייג...', 'ready');
+            device.connect({ To: number });
+        });
 
+        btnHangup.addEventListener('click', () => {
+            if (activeCall) activeCall.disconnect();
+        });
 
-        // --- NEW TRANSCRIPT LOGIC ---
-
-        function scrollTranscriptToBottom() {
-            const el = document.getElementById('transcript-scroll');
-            if (!el) return;
-            // Native smooth scroll behavior from CSS, but force top position
-            requestAnimationFrame(() => {
-                el.scrollTop = el.scrollHeight;
-            });
-        }
-
+        // --- UI UPDATERS ---
         function addTranscriptItem(data) {
-            // Target the scroll container directly as the feed
-            const feed = document.getElementById('transcript-scroll');
-            const emptyState = document.getElementById('empty-state');
-            if (emptyState) emptyState.style.display = 'none';
-
-            // Data prep
-            const role = data.role; // 'agent' or 'customer' or 'note'
+            const role = data.role; // 'agent' | 'customer' | 'note'
             let text = data.text || '';
             const isFinal = data.isFinal !== false;
 
@@ -807,8 +643,6 @@
                 if (isFinal) {
                     lastItem.dataset.partial = 'false';
                     if (bubble) bubble.classList.remove('partial');
-                    const typingEl = lastItem.querySelector('.typing-indicator');
-                    if (typingEl) typingEl.remove();
                 }
 
                 scrollTranscriptToBottom();
@@ -819,29 +653,10 @@
             const messageEl = document.createElement('div');
             // Add specific classes
             messageEl.className = 'transcript-message';
-            messageEl.classList.add(role);
-            if (!isFinal) messageEl.classList.add('new');
+            messageEl.classList.add(role); // 'agent' or 'customer'
 
             messageEl.dataset.speaker = role;
             messageEl.dataset.partial = (!isFinal).toString();
-
-            // Label (skip for notes)
-            if (role !== 'note') {
-                const labelEl = document.createElement('div');
-                labelEl.classList.add('transcript-label');
-
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = (role === 'agent') ? 'נציג' : 'לקוח';
-                labelEl.appendChild(nameSpan);
-
-                if (!isFinal) {
-                    const typingSpan = document.createElement('span');
-                    typingSpan.classList.add('typing-indicator', 'text-[10px]', 'animate-pulse', 'opacity-70');
-                    typingSpan.innerText = 'מקליד...';
-                    labelEl.appendChild(typingSpan);
-                }
-                messageEl.appendChild(labelEl);
-            }
 
             // Bubble
             const bubbleEl = document.createElement('div');
@@ -850,50 +665,52 @@
             bubbleEl.innerText = text;
 
             messageEl.appendChild(bubbleEl);
-
             feed.appendChild(messageEl);
             scrollTranscriptToBottom();
         }
 
+        function scrollTranscriptToBottom() {
+            feed.scrollTop = feed.scrollHeight;
+        }
+
         function updateInsight(data) {
-            // 1. Update Score
+            // 1. Update Score (Linear Bar)
             if (typeof data.score === 'number') {
                 const scoreVal = document.getElementById('score-val');
-                const scoreRing = document.getElementById('score-ring');
+                const scoreBar = document.getElementById('score-bar');
 
                 scoreVal.innerText = data.score;
-
-                // Ring calculation (circumference ~ 350)
-                // 100 score = 0 offset, 0 score = 350 offset
-                const offset = 350 - (data.score * 3.5);
-                scoreRing.style.strokeDashoffset = offset;
+                scoreBar.style.width = data.score + '%';
 
                 // Color grading
-                if (data.score > 80) scoreRing.classList.add('text-green-500');
-                else if (data.score < 50) scoreRing.classList.add('text-red-500');
-                else scoreRing.className = 'text-primary stroke-dasharray-350 stroke-dashoffset-100 transition-all duration-1000'; // Reset/Default
+                scoreBar.className = 'h-full rounded-full transition-all duration-1000 ' +
+                    (data.score > 80 ? 'bg-emerald-500' :
+                        data.score < 50 ? 'bg-rose-500' : 'bg-amber-500');
             }
 
-            // 2. Update Stage (Horizontal Progress Bar)
+            // 2. Update Stage (Vertical Stepper classes)
             if (data.stage) {
                 const stages = document.querySelectorAll('.stage-step');
                 let foundCurrent = false;
 
                 stages.forEach(step => {
-                    const stageName = step.dataset.stage;
+                    const stageName = step.dataset.stage; // Opening, Discovery...
+
+                    // Simple logic: If found current stage, mark it active. Previous are completed.
+                    // Note: This assumes data.stage is an ARRAY of stages or a single string. 
+                    // Let's assume data.stage might include "Discovery"
 
                     if (data.stage.includes(stageName)) {
-                        // This is the current active stage
+                        // ACTIVE
                         step.classList.add('active');
                         step.classList.remove('completed');
-                        step.querySelector('.step-dot').classList.add('bg-surface'); // Reset dot fill for active
                         foundCurrent = true;
                     } else if (!foundCurrent) {
-                        // Previous stages - Mark as completed
+                        // COMPLETED
                         step.classList.add('completed');
                         step.classList.remove('active');
                     } else {
-                        // Future stages - Reset
+                        // FUTURE
                         step.classList.remove('active', 'completed');
                     }
                 });
@@ -905,8 +722,8 @@
             const suggestEl = document.getElementById('insight-suggestion');
 
             // Flash effect
-            card.classList.add('border-primary');
-            setTimeout(() => card.classList.remove('border-primary'), 500);
+            card.classList.add('flash-border');
+            setTimeout(() => card.classList.remove('flash-border'), 1000);
 
             // Message is the short analysis
             if (data.message) {
@@ -922,42 +739,13 @@
             }
         }
 
-        // --- DEV SHORTCUT ---
-        document.addEventListener('keydown', (e) => {
-            if (e.shiftKey && e.key === 'S') {
-                if (!isCallActive) startCall();
-                setTimeout(() => addTranscriptItem({ role: 'agent', text: 'שלום, כאן יוסי מחברת סיילס.' }), 1000);
-                setTimeout(() => addTranscriptItem({ role: 'customer', text: 'היי, תגיד כמה עולה המנוי?' }), 2500);
-                setTimeout(() => updateInsight({ message: 'הלקוח שואל על מחיר מוקדם מדי.', suggested_reply: 'עדיף קודם להבין את הצרכים. נסה: "לפני שנדבר על מחיר, חשוב לי להבין מה בדיוק אתם צריכים כדי לתת הצעה מדויקת."' }), 3500);
-            }
-        });
-
-        // --- PERSONAL NOTES ---
-        const noteInput = document.getElementById('note-input');
-        if (noteInput) {
-            noteInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const text = noteInput.value.trim();
-                    if (text) {
-                        // Add note to transcript
-                        addTranscriptItem({
-                            role: 'note',
-                            text: text,
-                            isFinal: true
-                        });
-                        noteInput.value = '';
-                    }
-                }
-            });
-        }
-
         // --- HEALTH CHECK ---
         async function openHealthCheck() {
             const modal = document.getElementById('health-modal');
             const content = document.getElementById('health-content');
 
             modal.classList.remove('hidden');
-            content.innerHTML = `<div class="text-center py-8 text-textMuted">
+            content.innerHTML = `<div class="text-center py-8 text-slate-400">
                 <div class="animate-spin text-2xl mb-2">⏳</div>
                 בודק מערכות...
             </div>`;
@@ -973,58 +761,62 @@
                     return '⚪';
                 };
 
-                const statusText = (status) => {
-                    if (status === 'ok') return 'תקין';
-                    if (status === 'error') return 'שגיאה';
-                    if (status === 'not_configured') return 'לא מוגדר';
-                    return 'לא ידוע';
-                };
-
                 content.innerHTML = `
                     <div class="space-y-3">
-                        <div class="flex justify-between items-center p-3 bg-surfaceHighlight/30 rounded-lg">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                             <div class="flex items-center gap-3">
                                 <span class="text-xl">${statusIcon(data.server.status)}</span>
-                                <span class="font-medium">Server</span>
+                                <span class="font-bold text-slate-700">Server</span>
                             </div>
-                            <span class="text-sm text-textMuted">Uptime: ${data.server.uptime}s</span>
+                            <span class="text-xs text-slate-500 font-mono">Uptime: ${data.server.uptime}s</span>
                         </div>
                         
-                        <div class="flex justify-between items-center p-3 bg-surfaceHighlight/30 rounded-lg">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                             <div class="flex items-center gap-3">
                                 <span class="text-xl">${statusIcon(data.twilio.status)}</span>
-                                <span class="font-medium">Twilio</span>
+                                <span class="font-bold text-slate-700">Twilio</span>
                             </div>
-                            <span class="text-sm text-textMuted">${data.twilio.message || statusText(data.twilio.status)}</span>
+                            <span class="text-xs text-slate-500">${data.twilio.message || statusIcon(data.twilio.status)}</span>
                         </div>
                         
-                        <div class="flex justify-between items-center p-3 bg-surfaceHighlight/30 rounded-lg">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                             <div class="flex items-center gap-3">
                                 <span class="text-xl">${statusIcon(data.soniox.status)}</span>
-                                <span class="font-medium">Soniox (תמלול)</span>
+                                <span class="font-bold text-slate-700">Soniox</span>
                             </div>
-                            <span class="text-sm text-textMuted">${data.soniox.message || statusText(data.soniox.status)}</span>
+                            <span class="text-xs text-slate-500">${data.soniox.message || statusIcon(data.soniox.status)}</span>
                         </div>
                         
-                        <div class="flex justify-between items-center p-3 bg-surfaceHighlight/30 rounded-lg">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                             <div class="flex items-center gap-3">
                                 <span class="text-xl">${statusIcon(data.openai.status)}</span>
-                                <span class="font-medium">OpenAI (AI)</span>
+                                <span class="font-bold text-slate-700">OpenAI</span>
                             </div>
-                            <span class="text-sm text-textMuted">${data.openai.message || statusText(data.openai.status)}</span>
+                            <span class="text-xs text-slate-500">${data.openai.message || statusIcon(data.openai.status)}</span>
                         </div>
                     </div>
                 `;
             } catch (e) {
-                content.innerHTML = `<div class="text-center py-8 text-red-400">
-                    שגיאה בטעינת נתונים
-                </div>`;
+                content.innerHTML = `<div class="text-center py-8 text-red-500">שגיאה בטעינת נתונים</div>`;
             }
         }
 
         function closeHealthCheck() {
             document.getElementById('health-modal').classList.add('hidden');
         }
+
+        // --- DEV SHORTCUTS & INIT ---
+        document.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key === 'S') {
+                // Simulate Call
+                addTranscriptItem({ role: 'agent', text: 'בדיקת מערכת... שלום!' });
+                setTimeout(() => addTranscriptItem({ role: 'customer', text: 'אהלן, אני רוצה לקנות.' }), 1500);
+                setTimeout(() => updateInsight({ score: 85, stage: ['Discovery'], message: 'זיהוי הזדמנות מכירה.', suggested_reply: 'מעולה, בוא נבדוק מה מתאים לך.' }), 2500);
+            }
+        });
+
+        // Start
+        initTwilio();
     </script>
 </body>
 
