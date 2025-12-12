@@ -756,6 +756,15 @@
                 console.log('[WS] Received:', data.type, data);
                 if (data.type === 'transcript') addTranscriptItem(data);
                 if (data.type === 'coaching') updateInsight(data);
+                if (data.type === 'system') {
+                    // Show system messages in feed OR update status text
+                    if (data.message) {
+                        addTranscriptItem({ role: 'note', text: data.message, isFinal: true });
+                    }
+                    if (data.status === 'stream_started') {
+                        statusText.classList.add('text-green-400');
+                    }
+                }
                 if (data.type === 'call_summary') {
                     console.log('Call Summary Received:', data.data);
                     sessionStorage.setItem('lastCallSummary', JSON.stringify(data.data));

@@ -141,9 +141,13 @@ async function registerTwilioRoutes(fastify) {
                     const direction = urlParams.get('direction') || 'inbound';
                     console.log(`[Twilio] Stream Direction: ${direction}`);
 
-                    // We removed the eager initialization here in favor of lazy init in the 'media' block 
-                    // where we have the 'track' information handy to map to role.
-                    // This prevents creating a session for a track that might not send audio (e.g. silence).
+                    // Notify Frontend of Stream Start
+                    CallManager.broadcastToFrontend(callSid, {
+                        type: 'system',
+                        status: 'stream_started',
+                        role: 'system',
+                        message: 'מחובר למנוע תמלול (Soniox)'
+                    });
 
                 } else if (data.event === 'media') {
                     const track = data.media.track;
@@ -230,6 +234,14 @@ async function registerTwilioRoutes(fastify) {
                 }
             } catch (e) {
                 console.error('[Twilio] Error processing message:', e);
+                if (callSid) {
+                    CallManager.broadcastToFrontend(callSid, {
+                        type: 'system',
+                        status: 'error',
+                        role: 'system',
+                        message: 'שגיאה בתהליך התמלול'
+                    });
+                }
             }
         });
 
