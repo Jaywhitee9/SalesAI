@@ -157,11 +157,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!device) return;
 
         try {
+            setConnectionStatus('connecting');
             const call = await device.connect({ params: { target_number: phone } });
 
             call.on('accept', () => {
                 console.log('Call Accepted');
                 setIsOnCall(true);
+                setConnectionStatus('connected');
                 setActiveCall(call);
                 // @ts-ignore
                 const sid = call.parameters.CallSid;
@@ -172,6 +174,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log('Call Disconnected');
                 setIsOnCall(false);
                 setActiveCall(null);
+                setConnectionStatus('ready'); // Reset status so UI reverts
                 if (wsRef.current) wsRef.current.close();
             });
 
