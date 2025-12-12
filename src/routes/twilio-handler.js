@@ -141,13 +141,9 @@ async function registerTwilioRoutes(fastify) {
                     const direction = urlParams.get('direction') || 'inbound';
                     console.log(`[Twilio] Stream Direction: ${direction}`);
 
-                    // Notify Frontend of Stream Start
-                    CallManager.broadcastToFrontend(callSid, {
-                        type: 'system',
-                        status: 'stream_started',
-                        role: 'system',
-                        message: 'מחובר למנוע תמלול (Soniox)'
-                    });
+                    // We removed the eager initialization here in favor of lazy init in the 'media' block 
+                    // where we have the 'track' information handy to map to role.
+                    // This prevents creating a session for a track that might not send audio (e.g. silence).
 
                 } else if (data.event === 'media') {
                     const track = data.media.track;
@@ -172,7 +168,7 @@ async function registerTwilioRoutes(fastify) {
                             outboundSpeaker = 'agent';
                         }
 
-                        // --- DEBUG: Log Media Flow ---
+                        --DEBUG: Log Media Flow-- -
                         // call.frameCounters is not defined in manager, let's attach locally or extend manager
                         if (!call.frameCounters) call.frameCounters = { inbound: 0, outbound: 0 };
                         call.frameCounters[track]++;
@@ -207,41 +203,10 @@ async function registerTwilioRoutes(fastify) {
 
                 } else if (data.event === 'stop') {
                     console.log(`[Twilio] Stream stopped for ${callSid}`);
-
-                    if (callSid) {
-                        const call = CallManager.getCall(callSid);
-                        if (call) {
-                            // Generate Summary logic
-                            console.log(`[Twilio] Generating summary for ${callSid}...`);
-                            try {
-                                const summary = await CoachingEngine.generateSummary(call);
-                                if (summary) {
-                                    CallManager.broadcastToFrontend(callSid, {
-                                        type: 'call_summary',
-                                        data: summary
-                                    });
-                                }
-                            } catch (err) {
-                                console.error('[Twilio] Error generating summary:', err);
-                            }
-
-                            // Give a small buffer for the WS message to send before closing
-                            setTimeout(() => CallManager.cleanupCall(callSid), 1000);
-                        } else {
-                            CallManager.cleanupCall(callSid);
-                        }
-                    }
+                    CallManager.cleanupCall(callSid);
                 }
             } catch (e) {
                 console.error('[Twilio] Error processing message:', e);
-                if (callSid) {
-                    CallManager.broadcastToFrontend(callSid, {
-                        type: 'system',
-                        status: 'error',
-                        role: 'system',
-                        message: 'שגיאה בתהליך התמלול'
-                    });
-                }
             }
         });
 
@@ -295,7 +260,7 @@ async function registerTwilioRoutes(fastify) {
                     // Update State
                     call.lastCoachingTime = Date.now();
                     call.coachingHistory.push({
-                        type: advice.type || 'coaching',
+                        type: advice.type,
                         message: advice.message,
                         timestamp: Date.now()
                     });
@@ -303,12 +268,8 @@ async function registerTwilioRoutes(fastify) {
                     // Broadcast coaching to UI (Standardized Contract)
                     CallManager.broadcastToFrontend(callSid, {
                         type: 'coaching',
-                        severity: advice.severity || 'info',
-                        role: 'system',
-
-                        // New fields from Hebrew Engine
-                        stage: advice.stage,
-                        score: advice.score,
+                        severity: advice.severity || 'info', // Default if missing
+                        role: 'system', // It's from the system
                         message: advice.message,
                         suggested_reply: advice.suggested_reply
                     });

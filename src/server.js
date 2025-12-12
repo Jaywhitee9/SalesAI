@@ -16,8 +16,17 @@ fastify.register(fastifyFormBody);
 fastify.register(fastifyWs);
 
 fastify.register(fastifyStatic, {
-    root: path.join(__dirname, '../public'),
-    prefix: '/', // optional: default '/'
+    root: path.join(__dirname, '../client/dist'),
+    prefix: '/',
+});
+
+// SPA Fallback: Redirect all 404s (non-API) to index.html
+fastify.setNotFoundHandler((request, reply) => {
+    if (request.raw.url.startsWith('/api')) {
+        reply.code(404).send({ error: 'Endpoint not found' });
+    } else {
+        reply.sendFile('index.html');
+    }
 });
 
 // Import Routes
@@ -36,65 +45,6 @@ fastify.register(async function (fastify) {
 fastify.get('/health', async (request, reply) => {
     return { status: 'ok', uptime: process.uptime() };
 });
-
-// Comprehensive system health check
-fastify.get('/api/health', async (request, reply) => {
-    const results = {
-        server: { status: 'ok', uptime: Math.floor(process.uptime()) },
-        twilio: { status: 'unknown', message: '' },
-        soniox: { status: 'unknown', message: '' },
-        openai: { status: 'unknown', message: '' }
-    };
-
-    // Check Twilio
-    try {
-        if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-            results.twilio = { status: 'not_configured', message: 'API keys missing' };
-        } else {
-            const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-            const account = await twilio.api.accounts(process.env.TWILIO_ACCOUNT_SID).fetch();
-            results.twilio = { status: 'ok', message: `Connected: ${account.friendlyName}` };
-        }
-    } catch (e) {
-        results.twilio = { status: 'error', message: e.message };
-    }
-
-    // Check Soniox
-    try {
-        if (!process.env.SONIOX_API_KEY) {
-            results.soniox = { status: 'not_configured', message: 'API key missing' };
-        } else {
-            // Simple check - just verify key exists (actual WS test would be complex)
-            results.soniox = { status: 'ok', message: 'API key configured' };
-        }
-    } catch (e) {
-        results.soniox = { status: 'error', message: e.message };
-    }
-
-    // Check OpenAI
-    try {
-        const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
-        const baseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || process.env.OPENAI_BASE_URL;
-
-        if (!apiKey) {
-            results.openai = { status: 'not_configured', message: 'API key missing' };
-        } else {
-            const OpenAI = require('openai');
-            const openai = new OpenAI({ apiKey, baseURL: baseUrl });
-
-            // Quick test - list models (lightweight call)
-            await openai.models.list();
-            results.openai = { status: 'ok', message: baseUrl ? `Connected via ${baseUrl}` : 'Connected to OpenAI' };
-        }
-    } catch (e) {
-        results.openai = { status: 'error', message: e.message.substring(0, 100) };
-    }
-
-    return results;
-});
-
-// Note: The root '/' route is now handled by fastifyStatic (index.html)
-// unless we override it directly, but for typical SPA/static use, static takes care of it.
 
 const detectNgrokUrl = require('./utils/ngrok-detector');
 
