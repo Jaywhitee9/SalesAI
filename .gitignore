@@ -5,4 +5,3 @@ node_modules
 .gemini
 tunnel.log
 react-client-backup/
-client/dist

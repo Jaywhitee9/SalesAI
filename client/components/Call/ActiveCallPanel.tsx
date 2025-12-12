@@ -7,9 +7,12 @@ import { Button } from '../Common/Button';
 interface ActiveCallPanelProps {
     transcript: Message[];
     coachSuggestions: CoachSuggestion[];
+    onHangup?: () => void;
+    status?: string;
+    duration?: string;
 }
 
-export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, coachSuggestions }) => {
+export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, coachSuggestions, onHangup, status = 'מקליט...', duration = '00:00' }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [autoScroll, setAutoScroll] = useState(true);
 
@@ -61,8 +64,8 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
             {/* Call Controls Header - Minimalist */}
             <div className="h-16 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-20 flex-shrink-0">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
-                    <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">08:42 • מקליט...</span>
+                    <div className={`flex items-center justify-center w-2 h-2 rounded-full ${status === 'connected' ? 'bg-rose-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                    <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">{duration} • {status === 'connected' ? 'מקליט...' : status}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -72,7 +75,7 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                     <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600" title="השתק">
                         <Mic className="w-5 h-5" />
                     </Button>
-                    <Button variant="danger" size="sm" className="bg-rose-600 hover:bg-rose-700 text-white border-0">
+                    <Button variant="danger" size="sm" className="bg-rose-600 hover:bg-rose-700 text-white border-0" onClick={onHangup}>
                         <PhoneOff className="w-4 h-4 ml-2" />
                         סיום
                     </Button>
@@ -231,8 +234,8 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                            justify-end = Left (AI)
                         */}
                             <div className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm relative animate-in zoom-in-95 duration-200 ${msg.sender === 'user'
-                                    ? 'bg-purple-50 border border-purple-100 text-purple-900 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-100 rounded-br-none'
-                                    : 'bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 rounded-bl-none flex items-start gap-3'
+                                ? 'bg-purple-50 border border-purple-100 text-purple-900 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-100 rounded-br-none'
+                                : 'bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 rounded-bl-none flex items-start gap-3'
                                 }`}>
                                 {msg.sender === 'ai' && <Bot className="w-4 h-4 mt-0.5 text-purple-500 shrink-0" />}
                                 <span>{msg.text}</span>

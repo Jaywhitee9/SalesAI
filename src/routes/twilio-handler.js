@@ -168,7 +168,7 @@ async function registerTwilioRoutes(fastify) {
                             outboundSpeaker = 'agent';
                         }
 
-                        --DEBUG: Log Media Flow-- -
+                        // DEBUG: Log Media Flow
                         // call.frameCounters is not defined in manager, let's attach locally or extend manager
                         if (!call.frameCounters) call.frameCounters = { inbound: 0, outbound: 0 };
                         call.frameCounters[track]++;
@@ -234,6 +234,8 @@ async function registerTwilioRoutes(fastify) {
                 isFinal: isFinal,
                 timestamp: Date.now()
             });
+
+            console.log(`[Twilio] Broadcast Transcript for ${callSid}: ${role} - "${text.substring(0, 30)}..." [Final: ${isFinal}]`);
 
             // 2. Trigger Coaching Logic
             // --- CRITICAL: TRIGGER CONDITIONS ---

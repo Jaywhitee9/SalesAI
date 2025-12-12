@@ -2,857 +2,124 @@
 <html lang="he" dir="rtl">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Coach AI - Dashboard</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Heebo:wght@300;400;500;700;800&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        background: '#09090b',
-                        surface: '#18181b',
-                        surfaceHighlight: '#27272a',
-                        primary: '#3b82f6',
-                        primaryGlow: 'rgba(59, 130, 246, 0.5)',
-                        accent: '#8b5cf6',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444',
-                        textMain: '#fafafa',
-                        textMuted: '#a1a1aa'
-                    },
-                    fontFamily: {
-                        sans: ['Heebo', 'Outfit', 'sans-serif'],
-                    }
-                }
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesFlow AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Heebo', 'Inter', 'sans-serif'],
+            mono: ['Inter', 'monospace'], // Use Inter for numbers/mono
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1', // Indigo-500
+              600: '#4f46e5', // Indigo-600
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+              950: '#1e1b4b',
             }
-
-        // This function is assumed to be the target for the update based on the instruction.
-        // The provided code snippet seems to be part of a larger function that processes call events.
-        // For the purpose of this edit, it's placed as a standalone function,
-        // but in a real application, it would likely be integrated into an existing event handler.
-        async function addTranscriptItem(callSid, role, text, isFinal) {
-            // Placeholder for call and account objects, which would be available in a real context
-            const call = {}; // Assume call object is available
-            const account = { config: {} }; // Assume account object is available
-            const recentContext = {}; // Assume recentContext is available
-
-            // The provided code snippet starts here
-            const advice = await CoachingEngine.generateCoaching(call, account.config, recentContext);
-
-            if (advice) {
-                // Update State
-                call.lastCoachingTime = Date.now();
-                call.coachingHistory.push({
-                    type: advice.type,
-                    message: advice.message,
-                    timestamp: Date.now()
-                });
-
-                // Broadcast coaching to UI (Standardized Contract)
-                CallManager.broadcastToFrontend(callSid, {
-                    type: 'coaching',
-                    severity: advice.severity || 'info', // Default if missing
-                    role: 'system', // It's from the system
-                    message: advice.message,
-                    suggested_reply: advice.suggested_reply
-                });
-            } else {
-                // Broadcast PARTIAL or Agent transcripts just for display
-                CallManager.broadcastToFrontend(callSid, {
-                    type: 'transcript',
-                    role: role,
-                    text: text,
-                    isFinal: isFinal,
-                    timestamp: Date.now()
-                });
+          },
+          boxShadow: {
+            'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            'card': '0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0,0,0,0.02)', // Ultra subtle border via shadow
+            'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025), 0 0 0 1px rgba(99, 102, 241, 0.1)',
+            'glow': '0 0 20px rgba(99, 102, 241, 0.15)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
             }
-            // The provided code snippet ends here
+          }
         }
+      }
+    }
+  </script>
+  <style>
+    /* Premium Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
 
-        // Placeholder for CoachingEngine and CallManager, which would be defined elsewhere
-        const CoachingEngine = {
-            generateCoaching: async (call, config, context) => {
-                // Simulate AI response
-                return null; // Or { type: 'tip', message: 'Speak clearly!', severity: 'info' }
-            }
-        };
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
-        const CallManager = {
-            broadcastToFrontend: (callSid, data) => {
-                console.log(`Broadcasting to frontend for ${callSid}:`, data);
-                // In a real app, this would send data to the UI
-            }
-        };
-    </script>
-    <style>
-        body {
-            background-color: #09090b;
-            color: #fafafa;
-            height: 100vh;
-            overflow: hidden;
-        }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      /* Creates padding around thumb */
+      background-clip: content-box;
+    }
 
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+      border: 1px solid transparent;
+      background-clip: content-box;
+    }
 
-        ::-webkit-scrollbar-thumb {
-            background: #27272a;
-            border-radius: 3px;
-        }
+    /* Global Smoothness */
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      /* Subtle Mesh Gradient Background */
+      background-color: #f8fafc;
+      background-image:
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.03) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
 
-        .glass-panel {
-            background: rgba(24, 24, 27, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+    .dark body {
+      background-color: #0f172a;
+      background-image:
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.05) 0px, transparent 50%);
+    }
 
-        .animate-pulse-slow {
-            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: .5;
-            }
-        }
-
-        .typing-dot {
-            animation: typing 1.4s infinite ease-in-out both;
-        }
-
-        .typing-dot:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes typing {
-
-            0%,
-            80%,
-            100% {
-                transform: scale(0);
-            }
-
-            40% {
-                transform: scale(1);
-            }
-        }
-
-        /* SCROLLABLE TRANSCRIPT AREA - REFACTORED */
-        #transcript-panel {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            /* Occupy remaining space */
-            min-height: 0;
-            /* Critical for flex scrolling */
-            width: 100%;
-            position: relative;
-        }
-
-        #transcript-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 16px 80px;
-            /* Extra padding at bottom for input area */
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            scroll-behavior: smooth;
-        }
-
-        .transcript-message {
-            display: flex;
-            flex-direction: column;
-            max-width: 80%;
-            position: relative;
-            transition: all 0.2s ease-out;
-            flex-shrink: 0;
-            /* Prevent shrinking */
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .transcript-message.new {
-            animation: fadeIn 0.3s forwards;
-        }
-
-        .transcript-message.agent {
-            align-self: flex-start;
-        }
-
-        /* Agent (Right in RTL) -> Flex Start */
-        .transcript-message.customer {
-            align-self: flex-end;
-        }
-
-        /* Customer (Left in RTL) -> Flex End */
-
-        .transcript-label {
-            font-size: 0.7rem;
-            /* text-xs */
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .transcript-message.agent .transcript-label {
-            color: #a1a1aa;
-            /* textMuted */
-        }
-
-        .transcript-message.customer .transcript-label {
-            color: #3b82f6;
-            /* primary */
-        }
-
-        .transcript-bubble {
-            padding: 1rem;
-            border-radius: 1rem;
-            font-size: 0.875rem;
-            /* text-sm */
-            line-height: 1.6;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Agent Bubble (Right) */
-        .transcript-message.agent .transcript-bubble {
-            background-color: #27272a;
-            /* surfaceHighlight */
-            color: #fafafa;
-            border-top-right-radius: 0.25rem;
-        }
-
-        /* Customer Bubble (Left) */
-        .transcript-message.customer .transcript-bubble {
-            background-color: rgba(59, 130, 246, 0.15);
-            /* primary/15 */
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            color: #fafafa;
-            border-top-left-radius: 0.25rem;
-        }
-
-        .transcript-bubble.partial {
-            opacity: 0.7;
-            border-style: dashed;
-        }
-
-        /* Personal Note (Center) */
-        .transcript-message.note {
-            align-self: center;
-            max-width: 90%;
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .transcript-message.note .transcript-bubble {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #fbbf24;
-            /* amber-400 */
-            font-style: italic;
-            text-align: center;
-            border: 1px dashed rgba(251, 191, 36, 0.3);
-            padding: 0.75rem 1.5rem;
-            font-size: 0.8rem;
-        }
-
-        .transcript-message.note .transcript-label {
-            display: none;
-        }
-    </style>
+    /* Focus Ring override for a cleaner look */
+    *:focus-visible {
+      outline: 2px solid #6366f1;
+      outline-offset: 2px;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-BPTCRhrp.js"></script>
 </head>
 
-<body class="flex flex-col">
-
-    <!-- Navbar -->
-    <nav class="h-16 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center justify-between px-6 z-50">
-        <div class="flex items-center gap-3">
-            <div
-                class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-lg">
-                S</div>
-            <span class="font-bold text-lg tracking-tight">Sales<span class="text-primary">Coach</span></span>
-        </div>
-        <div class="flex items-center gap-4">
-            <div
-                class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surfaceHighlight border border-white/5 text-sm text-green-400">
-                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                <span>מחובר (Online)</span>
-            </div>
-            <button
-                class="w-8 h-8 rounded-full bg-surfaceHighlight flex items-center justify-center hover:bg-white/10 transition">⚙️</button>
-        </div>
-    </nav>
-
-    <!-- Main Grid -->
-    <main class="flex-1 grid grid-cols-12 gap-0 overflow-hidden">
-
-        <!-- LEFT COLUMN: Dialer & Stats (3 Columns) -->
-        <aside class="col-span-3 border-l border-white/5 bg-surface/30 flex flex-col">
-            <div class="p-6 border-b border-white/5">
-                <h2 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-4">חייגן</h2>
-
-                <!-- Dialer -->
-                <div class="bg-surfaceHighlight/50 p-1 rounded-2xl border border-white/5 mb-4">
-                    <input type="tel" id="phone-input"
-                        class="w-full bg-transparent text-center text-xl font-mono py-4 focus:outline-none text-white tracking-widest placeholder-white/20"
-                        placeholder="050-000-0000">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <button onclick="startCall()" id="btn-call"
-                        class="col-span-2 py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all transform active:scale-95">
-                        <span>📞</span> חייג עכשיו
-                    </button>
-                    <button onclick="hangup()" id="btn-hangup"
-                        class="col-span-2 hidden py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all">
-                        <span>⛔</span> סיים שיחה
-                    </button>
-                </div>
-
-                <!-- Status Text -->
-                <div id="call-status-text" class="text-center text-sm text-textMuted h-6">מוכן לשיחה</div>
-            </div>
-
-            <!-- Stats / History -->
-            <div class="flex-1 overflow-y-auto p-4">
-                <h3 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">שיחות אחרונות</h3>
-                <div class="space-y-2">
-                    <div
-                        class="p-3 rounded-lg bg-surfaceHighlight/30 border border-white/5 flex justify-between items-center text-sm hover:bg-surfaceHighlight/50 cursor-pointer transition">
-                        <div>
-                            <div class="font-medium">דניאל כהן</div>
-                            <div class="text-xs text-textMuted">לפני 15 דק'</div>
-                        </div>
-                        <div class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-xs">85 נק'</div>
-                    </div>
-                    <div
-                        class="p-3 rounded-lg bg-surfaceHighlight/30 border border-white/5 flex justify-between items-center text-sm hover:bg-surfaceHighlight/50 cursor-pointer transition">
-                        <div>
-                            <div class="font-medium">שרה לוי</div>
-                            <div class="text-xs text-textMuted">לפני 42 דק'</div>
-                        </div>
-                        <div class="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400 text-xs">60 נק'</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- CENTER COLUMN: Transcript (6 Columns) -->
-        <div class="col-span-6 flex flex-col bg-background relative h-full overflow-hidden">
-            <!-- Header -->
-            <div
-                class="h-14 border-b border-white/5 flex items-center justify-between px-6 bg-surface/20 backdrop-blur z-10">
-                <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-textMuted">שיחה פעילה:</span>
-                    <span id="active-contact" class="font-mono font-bold tracking-wide">--</span>
-                </div>
-                <div id="call-timer"
-                    class="font-mono text-xl text-primary font-bold opacity-0 transition-opacity duration-300">00:00
-                </div>
-            </div>
-
-            <!-- Feed -->
-            <div id="transcript-panel">
-                <div id="transcript-scroll" class="transcript-scroll">
-                    <div class="text-center py-20 opacity-30" id="empty-state">
-                        <div class="text-6xl mb-4">💬</div>
-                        <div class="text-lg">התמלול יופיע כאן בזמן אמת</div>
-                    </div>
-                    <!-- Bubbles will be appended here directly -->
-                </div>
-            </div>
-
-            <!-- Input Area (Notes) -->
-            <div class="p-4 border-t border-white/5 bg-surface/40 backdrop-blur absolute bottom-0 w-full">
-                <div class="relative">
-                    <input type="text" id="note-input"
-                        class="w-full bg-surfaceHighlight border border-white/10 rounded-xl px-4 py-3 pl-10 focus:outline-none focus:border-primary/50 transition placeholder-textMuted"
-                        placeholder="הוסף הערה אישית...">
-                    <span class="absolute left-3 top-3.5 opacity-50">↵</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- RIGHT COLUMN: Coach AI (3 Columns) -->
-        <aside class="col-span-3 border-r border-white/5 bg-surface/30 flex flex-col overflow-hidden">
-
-            <!-- Live Analysis Header -->
-            <div class="p-5 border-b border-white/5">
-                <h2 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-4">Live Analysis</h2>
-
-                <!-- Meter -->
-                <div class="relative h-32 flex items-center justify-center mb-2">
-                    <svg class="w-32 h-32 transform -rotate-90">
-                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent"
-                            class="text-surfaceHighlight" />
-                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent"
-                            class="text-primary stroke-dasharray-350 stroke-dashoffset-100 transition-all duration-1000"
-                            id="score-ring" />
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="text-3xl font-bold" id="score-val">--</span>
-                        <span class="text-[10px] text-textMuted uppercase mt-1">ציון התאמה</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto p-5 space-y-6">
-
-                <!-- AI Insight Card -->
-                <div id="ai-insight-card"
-                    class="glass-panel p-5 rounded-2xl relative overflow-hidden group transition-all duration-300 hover:border-primary/30">
-                    <div class="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-primary to-accent"></div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-lg animate-bounce">💡</span>
-                        <span class="font-bold text-sm text-primary uppercase tracking-wide">המלצה חכמה</span>
-                    </div>
-                    <div id="insight-text" class="font-medium text-lg leading-relaxed mb-3">
-                        המערכת ממתינה לנתונים...
-                    </div>
-                    <div id="insight-suggestion"
-                        class="hidden text-sm text-textMuted bg-white/5 p-3 rounded-lg border-r-2 border-primary/50 italic">
-                        "אני מבין את החשש, בוא נראה איך..."
-                    </div>
-                </div>
-
-                <!-- Checklist -->
-                <div>
-                    <h3 class="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">שלבי שיחה</h3>
-                    <div class="space-y-2">
-                        <div
-                            class="flex items-center gap-3 p-3 rounded-xl bg-surfaceHighlight/50 border border-white/5 opacity-50">
-                            <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
-                            <div class="text-sm">פתיחה וחיבור</div>
-                        </div>
-                        <div
-                            class="flex items-center gap-3 p-3 rounded-xl bg-surfaceHighlight/50 border border-white/5 opacity-50">
-                            <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
-                            <div class="text-sm">זיהוי צרכים</div>
-                        </div>
-                        <div
-                            class="flex items-center gap-3 p-3 rounded-xl bg-surfaceHighlight/50 border border-white/5 opacity-50">
-                            <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
-                            <div class="text-sm">הצגת פתרון</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-    </main>
-
-    <script>console.log('Attempting to load Twilio SDK...');</script>
-    <!-- Twilio Voice SDK v2.11.1 (via jsDelivr) -->
-    <script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.11.1/dist/twilio.min.js"
-        onload="console.log('Twilio Voice SDK Loaded')" onerror="handleSdkLoadError()"></script>
-    <script>
-        function handleSdkLoadError() {
-            const statusText = document.getElementById('call-status-text');
-            console.error('Twilio SDK Load Failed (Network/Block).');
-            statusText.innerText = 'שגיאה: טעינת רכיב השיחה נכשלה. נסה לרענן.';
-            statusText.classList.add('text-red-500');
-
-            // Optional: Create a retry button
-            const container = statusText.parentElement;
-            if (!document.getElementById('retry-sdk-btn')) {
-                const retryBtn = document.createElement('button');
-                retryBtn.id = 'retry-sdk-btn';
-                retryBtn.innerText = 'נסה שוב';
-                retryBtn.className = 'mt-2 px-3 py-1 bg-white/10 rounded text-xs hover:bg-white/20 transition';
-                retryBtn.onclick = () => window.location.reload();
-                container.appendChild(retryBtn);
-            }
-        }
-    </script>
-    <script>
-        // State
-        let isCallActive = false;
-        let callTimer = null;
-        let seconds = 0;
-        let ws = null;
-        let activeConnection = null;
-        let device = null;
-        let callSid = null; // Will be set from Twilio Connection
-
-        const btnCall = document.getElementById('btn-call');
-        const btnHangup = document.getElementById('btn-hangup');
-        const inputPhone = document.getElementById('phone-input');
-        const statusText = document.getElementById('call-status-text');
-        const timerDisplay = document.getElementById('call-timer');
-        const activeContact = document.getElementById('active-contact');
-        const feed = document.getElementById('transcript-feed');
-
-        // --- INIT DEVICE ON LOAD ---
-        async function initDevice() {
-            try {
-                console.log('Fetching token from /api/token...');
-                statusText.innerText = "טוען חיבור לטלפון...";
-
-                const res = await fetch('/api/token');
-                if (!res.ok) throw new Error(`Token fetch failed: ${res.status} ${res.statusText}`);
-
-                const data = await res.json();
-                console.log('Token received:', data);
-
-                // Twilio Voice SDK v2 Initialization
-                // Note: The global might be Twilio.Device or Twilio.Voice.Device depending on the bundle.
-                // The CDN usually exposes Twilio.Device directly or via Twilio.Voice.
-                const Device = Twilio.Device;
-
-                device = new Device(data.token, {
-                    codecPreferences: ['opus', 'pcmu'],
-                    // fakeLocalDTMF, enableRingingState are v1 legacy options - removed
-                    debug: true,
-                    // v2 specific options can go here
-                });
-
-                // Register the device for incoming calls
-                device.register();
-
-                device.on('registered', function () {
-                    console.log('Twilio.Device Ready (Registered)!');
-                    statusText.innerText = "מוכן לשיחה (Voice SDK v2)";
-                    statusText.classList.remove('text-red-500');
-                    statusText.classList.add('text-green-400');
-                });
-
-                device.on('error', function (error) {
-                    console.error('Twilio.Device Error:', error);
-                    // Ignore some harmless errors or handle them
-                    if (error.code === 31205) return; // Keep alive error, ignore
-                    statusText.innerText = "שגיאה: " + error.message;
-                    statusText.classList.add('text-red-500');
-                });
-
-                // In v2, 'connect' event on device is for unexpected connections? 
-                // Usually we handle outgoing via the promise, and incoming via 'incoming' event.
-                // We'll leave this empty or use it for debugging.
-
-            } catch (err) {
-                console.error('CRITICAL Error during Device init:', err);
-                statusText.innerText = "שגיאת אתחול: " + err.message;
-                statusText.classList.add('text-red-500');
-            }
-        }
-
-        // --- INIT DEVICE ON LOAD ---
-        window.addEventListener('load', () => {
-            // Check if we are blocked
-            if (statusText.innerText.includes('AdBlock')) return;
-
-            // Start polling for the SDK
-            waitForTwilio();
-        });
-
-        function waitForTwilio(attempts = 0) {
-            if (typeof Twilio !== 'undefined') {
-                console.log('Twilio global found. Initializing...');
-                initDevice();
-                return;
-            }
-
-            if (attempts > 50) { // 5 seconds (50 * 100ms)
-                console.error('Twilio SDK load timed out.');
-                statusText.innerText = "שגיאה: טעינת הרכיבים איטית מדי. נסה לרענן.";
-                statusText.classList.add('text-red-500');
-                // Allow a manual retry button here too if needed
-                handleSdkLoadError(); // re-use error handler to show retry
-                return;
-            }
-
-            if (attempts % 10 === 0) {
-                // Update UI every second
-                if (!statusText.innerText.includes('שגיאה')) {
-                    statusText.innerText = `טוען רכיבים... (${Math.floor(attempts / 10)})`;
-                }
-            }
-
-            setTimeout(() => waitForTwilio(attempts + 1), 100);
-        }
-
-        // Functions
-        async function startCall() {
-            const phone = inputPhone.value;
-            if (!phone) {
-                inputPhone.classList.add('border-red-500');
-                setTimeout(() => inputPhone.classList.remove('border-red-500'), 2000);
-                return;
-            }
-
-            if (!device) {
-                alert('Device not initialized yet. Please wait.');
-                return;
-            }
-
-            statusText.innerText = "מתקשר...";
-            activeContact.innerText = phone;
-            // feed.innerHTML = ''; // Clean feed - This line is removed as per the refactor, transcript-scroll is now the feed.
-
-            try {
-                // Connect via WebRTC (v2)
-                // device.connect() returns a Promise resolving to a Call object
-                const params = {
-                    target_number: phone
-                };
-
-                console.log('Dialing ' + phone + '...');
-                const call = await device.connect({ params: params });
-
-                // Setup Call Listeners
-                call.on('accept', () => {
-                    console.log('Call accepted');
-                    statusText.innerText = "בשיחה";
-                    activeConnection = call;
-                    // v2: call.parameters.CallSid contains the Sid
-                    callSid = call.parameters.CallSid;
-                    setCallState(true);
-                    startTimer();
-                    connectWS(callSid);
-                });
-
-                call.on('disconnect', () => {
-                    console.log('Call disconnected');
-                    statusText.innerText = "השיחה הסתיימה";
-                    activeConnection = null;
-                    hangup();
-                });
-
-                call.on('error', (err) => {
-                    console.error('Call Error:', err);
-                    statusText.innerText = "שגיאה בשיחה";
-                });
-
-            } catch (e) {
-                console.error('Connection failed:', e);
-                statusText.innerText = "שגיאה בחיוג: " + e.message;
-                setTimeout(() => setCallState(false), 2000);
-            }
-        }
-
-        async function hangup() {
-            if (activeConnection) {
-                activeConnection.disconnect();
-            } else if (device) {
-                device.disconnectAll();
-            }
-
-            setCallState(false);
-            // Optional: Redirect to summary only if a real call happened
-            // window.location.href = '/summary.html'; 
-        }
-
-        function setCallState(active) {
-            isCallActive = active;
-            if (active) {
-                btnCall.classList.add('hidden');
-                btnHangup.classList.remove('hidden');
-                timerDisplay.classList.remove('opacity-0');
-            } else {
-                btnCall.classList.remove('hidden');
-                btnHangup.classList.add('hidden');
-                timerDisplay.classList.add('opacity-0');
-                clearInterval(callTimer);
-                seconds = 0;
-            }
-        }
-
-        function startTimer() {
-            clearInterval(callTimer);
-            callTimer = setInterval(() => {
-                seconds++;
-                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                const s = (seconds % 60).toString().padStart(2, '0');
-                timerDisplay.innerText = `${m}:${s}`;
-            }, 1000);
-        }
-
-        function connectWS(sid) {
-            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${proto}//${location.host}/ws/coach?callSid=${sid}`);
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                console.log('[WS] Received:', data.type, data);
-                if (data.type === 'transcript') addTranscriptItem(data);
-                if (data.type === 'coaching') updateInsight(data);
-            };
-        }
-
-        // Transcript Logic
-
-
-
-        // --- NEW TRANSCRIPT LOGIC ---
-
-        function scrollTranscriptToBottom() {
-            const el = document.getElementById('transcript-scroll');
-            if (!el) return;
-            // Native smooth scroll behavior from CSS, but force top position
-            requestAnimationFrame(() => {
-                el.scrollTop = el.scrollHeight;
-            });
-        }
-
-        function addTranscriptItem(data) {
-            // Target the scroll container directly as the feed
-            const feed = document.getElementById('transcript-scroll');
-            const emptyState = document.getElementById('empty-state');
-            if (emptyState) emptyState.style.display = 'none';
-
-            // Data prep
-            const role = data.role; // 'agent' or 'customer' or 'note'
-            let text = data.text || '';
-            const isFinal = data.isFinal !== false;
-
-            // Cleanup 
-            text = text.replace(/<end>/gi, '').trim();
-            if (!text) return;
-
-            // Check for existing partial bubble to update
-            const lastItem = feed.lastElementChild;
-            const lastWasPartial = lastItem && lastItem.dataset.partial === 'true';
-            const lastWasSameSpeaker = lastItem && lastItem.dataset.speaker === role;
-
-            if (lastWasPartial && lastWasSameSpeaker) {
-                // UPDATE existing bubble
-                const bubble = lastItem.querySelector('.transcript-bubble');
-                if (bubble) bubble.innerText = text;
-
-                if (isFinal) {
-                    lastItem.dataset.partial = 'false';
-                    if (bubble) bubble.classList.remove('partial');
-                    const typingEl = lastItem.querySelector('.typing-indicator');
-                    if (typingEl) typingEl.remove();
-                }
-
-                scrollTranscriptToBottom();
-                return;
-            }
-
-            // CREATE new bubble
-            const messageEl = document.createElement('div');
-            // Add specific classes
-            messageEl.className = 'transcript-message';
-            messageEl.classList.add(role);
-            if (!isFinal) messageEl.classList.add('new');
-
-            messageEl.dataset.speaker = role;
-            messageEl.dataset.partial = (!isFinal).toString();
-
-            // Label (skip for notes)
-            if (role !== 'note') {
-                const labelEl = document.createElement('div');
-                labelEl.classList.add('transcript-label');
-
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = (role === 'agent') ? 'נציג' : 'לקוח';
-                labelEl.appendChild(nameSpan);
-
-                if (!isFinal) {
-                    const typingSpan = document.createElement('span');
-                    typingSpan.classList.add('typing-indicator', 'text-[10px]', 'animate-pulse', 'opacity-70');
-                    typingSpan.innerText = 'מקליד...';
-                    labelEl.appendChild(typingSpan);
-                }
-                messageEl.appendChild(labelEl);
-            }
-
-            // Bubble
-            const bubbleEl = document.createElement('div');
-            bubbleEl.classList.add('transcript-bubble');
-            if (!isFinal) bubbleEl.classList.add('partial');
-            bubbleEl.innerText = text;
-
-            messageEl.appendChild(bubbleEl);
-
-            feed.appendChild(messageEl);
-            scrollTranscriptToBottom();
-        }
-
-        function updateInsight(data) {
-            const card = document.getElementById('ai-insight-card');
-            const textEl = document.getElementById('insight-text');
-            const suggestEl = document.getElementById('insight-suggestion');
-
-            // Flash effect
-            card.classList.add('border-primary');
-            setTimeout(() => card.classList.remove('border-primary'), 500);
-
-            textEl.innerText = data.message;
-            if (data.suggested_reply) {
-                suggestEl.innerText = `"${data.suggested_reply}"`;
-                suggestEl.classList.remove('hidden');
-            } else {
-                suggestEl.classList.add('hidden');
-            }
-        }
-
-        // --- DEV SHORTCUT ---
-        document.addEventListener('keydown', (e) => {
-            if (e.shiftKey && e.key === 'S') {
-                if (!isCallActive) startCall();
-                setTimeout(() => addTranscriptItem({ role: 'agent', text: 'שלום, כאן יוסי מחברת סיילס.' }), 1000);
-                setTimeout(() => addTranscriptItem({ role: 'customer', text: 'היי, תגיד כמה עולה המנוי?' }), 2500);
-                setTimeout(() => updateInsight({ message: 'הלקוח שואל על מחיר מוקדם מדי.', suggested_reply: 'עדיף קודם להבין את הצרכים. נסה: "לפני שנדבר על מחיר, חשוב לי להבין מה בדיוק אתם צריכים כדי לתת הצעה מדויקת."' }), 3500);
-            }
-        });
-
-        // --- PERSONAL NOTES ---
-        const noteInput = document.getElementById('note-input');
-        if (noteInput) {
-            noteInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const text = noteInput.value.trim();
-                    if (text) {
-                        // Add note to transcript
-                        addTranscriptItem({
-                            role: 'note',
-                            text: text,
-                            isFinal: true
-                        });
-                        noteInput.value = '';
-                    }
-                }
-            });
-        }
-    </script>
+<body>
+  <div id="root"></div>
 </body>
 
 </html>
