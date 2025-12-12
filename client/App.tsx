@@ -4,6 +4,7 @@ import { Sidebar } from './components/Layout/Sidebar';
 import { TopBar } from './components/Layout/TopBar';
 import { CallStatusPanel } from './components/Call/CallStatusPanel';
 import { ActiveCallPanel } from './components/Call/ActiveCallPanel';
+import { EmptyCallState } from './components/Call/EmptyCallState';
 import { InsightsPanel } from './components/Call/InsightsPanel';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { ManagerDashboard } from './components/Dashboard/ManagerDashboard';
@@ -46,7 +47,8 @@ function App() {
     callDuration,
     isReady,
     connectionStatus,
-    hangup
+    hangup,
+    isOnCall
   } = useCall();
 
   // Initialize Device on login/mount
@@ -165,43 +167,49 @@ function App() {
                   isDarkMode={isDarkMode}
                 />
               ) : (
-                // Live Call View Layout (Shared for now, or could be adapted for Manager to "Monitor")
-                <>
-                  <CallStatusPanel
-                    stages={CALL_STAGES.map(s => ({
-                      ...s,
-                      status: coachingData.stageStatus?.[s.label] ||
-                        (s.label === coachingData.stage ? 'current' :
-                          // Simple logic: if index < current index -> completed? 
-                          // For now just highlight current
-                          'upcoming')
-                    }))}
-                    lead={CURRENT_LEAD}
-                    duration={formatDuration(callDuration)}
-                    isDarkMode={isDarkMode}
-                    sentiment="neutral"
-                  />
+                // Live Call View Layout
+                (isOnCall || connectionStatus === 'connecting' || connectionStatus === 'connected') ? (
+                  <>
+                    <CallStatusPanel
+                      stages={CALL_STAGES.map(s => ({
+                        ...s,
+                        status: coachingData.stageStatus?.[s.label] ||
+                          (s.label === coachingData.stage ? 'current' :
+                            'upcoming')
+                      }))}
+                      lead={CURRENT_LEAD}
+                      duration={formatDuration(callDuration)}
+                      isDarkMode={isDarkMode}
+                      sentiment="neutral"
+                    />
 
-                  <ActiveCallPanel
-                    transcript={transcripts.length > 0 ? transcripts : MOCK_TRANSCRIPT}
-                    coachSuggestions={coachingData.suggestion ? [{
-                      id: Date.now().toString(),
-                      text: coachingData.suggestion,
-                      type: 'tip'
-                    }] : AI_COACH_MESSAGES}
-                    onHangup={hangup}
-                    status={connectionStatus === 'connected' ? 'connected' : connectionStatus === 'connecting' ? 'מתקשר...' : 'מנותק'}
-                    duration={formatDuration(callDuration)}
-                  />
+                    <ActiveCallPanel
+                      transcript={transcripts.length > 0 ? transcripts : MOCK_TRANSCRIPT}
+                      coachSuggestions={coachingData.suggestion ? [{
+                        id: Date.now().toString(),
+                        text: coachingData.suggestion,
+                        type: 'tip'
+                      }] : AI_COACH_MESSAGES}
+                      onHangup={hangup}
+                      status={connectionStatus === 'connected' ? 'connected' : connectionStatus === 'connecting' ? 'מתקשר...' : 'מנותק'}
+                      duration={formatDuration(callDuration)}
+                    />
 
-                  <InsightsPanel
-                    insights={[
-                      { id: 'score', type: 'key_point', title: `ציון שיחה: ${coachingData.score}` },
-                      { id: 'insight', type: 'info', title: coachingData.insight },
-                      ...INITIAL_INSIGHTS
-                    ]}
+                    <InsightsPanel
+                      insights={[
+                        { id: 'score', type: 'key_point', title: `ציון שיחה: ${coachingData.score}` },
+                        { id: 'insight', type: 'info', title: coachingData.insight },
+                        ...INITIAL_INSIGHTS
+                      ]}
+                    />
+                  </>
+                ) : (
+                  <EmptyCallState
+                    onStartCall={(number) => {
+                      startCall(number || CURRENT_LEAD.phone).catch(console.error);
+                    }}
                   />
-                </>
+                )
               )}
 
             </main>
