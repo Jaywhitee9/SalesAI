@@ -54,7 +54,7 @@ function App() {
 
   // Initialize Device on login/mount
   useEffect(() => {
-    console.log("App Version: Verify Fix Applied - 1.1");
+    console.log("App Version: 1.2 - PRODUCTION SYNC (Localhost Uploaded)");
     if (isAuthenticated && !isReady) {
       initDevice();
     }
