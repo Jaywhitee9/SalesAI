@@ -92,6 +92,7 @@ async function registerTwilioRoutes(fastify) {
     fastify.get('/voice', voiceHandler);
 
     // 2. WebSocket Endpoint for Media Stream
+    // 2. WebSocket Endpoint for Media Stream
     fastify.get('/twilio-stream', { websocket: true }, (connection, req) => {
         console.log("🔌 New Twilio media stream connection", {
             url: req.url,
@@ -102,123 +103,94 @@ async function registerTwilioRoutes(fastify) {
         let callSid = null;
         let streamSid = null;
 
+        // --- ROLE MAPPING HELPER ---
+        // Determines logical role (agent/customer) based on audio track (inbound/outbound)
+        // and call direction (inbound/outbound).
+        // 
+        // Rules:
+        // 1. Inbound Call (Customer calls us):
+        //    - 'inbound' track (From caller) = customer
+        //    - 'outbound' track (From us/Twilio) = agent
+        //
+        // 2. Outbound Call (We call Customer):
+        //    - 'inbound' track (From callee) = customer (Wait, inbound for Twilio on outbound call is callee audio?)
+        //      Actually for Programmable Voice:
+        //      - 'inbound' track is remote party (mixed).
+        //      - 'outbound' track is what Twilio sends to the call.
+        //      - Let's stick to the user's tested logic:
+        //        If direction=outbound: inbound->agent, outbound->customer??
+        //        Wait, verified code says:
+        /*
+           if (direction === 'outbound') {
+                 inboundSpeaker = 'agent';
+                 outboundSpeaker = 'customer';
+            } else {
+                 inboundSpeaker = 'customer';
+                 outboundSpeaker = 'agent';
+            }
+        */
+        const resolveRole = (track, callDirection) => {
+            // Inbound Call: 'inbound' track = Customer (Caller), 'outbound' track = Agent (Say/Play)
+            if (callDirection === 'inbound') {
+                return track === 'inbound' ? 'customer' : 'agent';
+            }
+            // Outbound Call: 'inbound' track = Agent (Caller), 'outbound' = Customer (Callee)?
+            // NOTE: This depends heavily on how Twilio streams are forked. 
+            // Typically 'inbound' is the audio received by Twilio. 
+            // On outbound call, Twilio initiates. 'Inbound' audio comes from the person picked up?
+            // User's previous code had inverted logic for outbound. We preserve it but log it explicitly.
+            else {
+                return track === 'inbound' ? 'agent' : 'customer';
+            }
+        };
+
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
 
-                // INSTRUMENTATION: Log incoming event
-                console.log("🎧 Twilio media event", {
-                    event: data.event,
-                    streamSid: data.streamSid,
-                    track: data.media?.track,
-                    chunk: data.media?.chunk,
-                    timestamp: data.media?.timestamp,
-                    payloadLength: data.media?.payload?.length,
-                });
+                // Extract direction from the WebSocket request URL once
+                const urlParams = new URLSearchParams(req.url.split('?')[1]);
+                const callDirection = urlParams.get('direction') || 'inbound';
 
                 if (data.event === 'start') {
                     callSid = data.start.callSid;
                     streamSid = data.start.streamSid;
 
-                    // --- DETERMINISTIC CONTEXT RESOLUTION ---
-                    // Resolve Account/Agent based on call params (From/To)
-                    // In a real scenario, data.start.customParameters or From/To would be used
-                    // We'll mock it using the TenantStore
-
-                    // Mocking the 'From' param for demo purposes since we don't have it easily in start event
-                    // typically checking `data.start.customParameters` or internal lookup map
-                    let context;
                     try {
-                        context = TenantStore.resolveContext({ From: 'default' }); // Force default for now
+                        // Resolve Context
+                        const context = TenantStore.resolveContext({ From: 'default' });
+                        console.log(`[Twilio] Stream started for CallSid: ${callSid} [Tenant: ${context.account.name}]`);
+                        console.log(`[Twilio] Stream Direction: ${callDirection}`);
+
+                        // Initialize Call State
+                        const call = CallManager.getCall(callSid, context);
                     } catch (e) {
                         console.error(`[Twilio] Failed to resolve context: ${e.message}`);
                         ws.close();
                         return;
                     }
 
-                    console.log(`[Twilio] Stream started for CallSid: ${callSid} [Tenant: ${context.account.name}]`);
-
-                    // Initialize Call State WITH CONTEXT
-                    const call = CallManager.getCall(callSid, context);
-
-                    // --- CRITICAL: OPEN DUAL SONIOX SESSIONS ---
-                    // Sessions are now created lazily on first media packet or explicitly here if we prefer.
-                    // But since we need the direction which is clearer in the 'media' event loop (or we could parse it here too),
-                    // Let's do it lazily in 'media' block to keep the logic unified or parse it here.
-
-                    // Actually, let's just logging here and let 'media' event drive the session creation 
-                    // to ensure we have the track info correct.
-                    // OR better: Parse direction here and init. 
-
-                    const urlParams = new URLSearchParams(req.url.split('?')[1]);
-                    const direction = urlParams.get('direction') || 'inbound';
-                    console.log(`[Twilio] Stream Direction: ${direction}`);
-
-                    // We removed the eager initialization here in favor of lazy init in the 'media' block 
-                    // where we have the 'track' information handy to map to role.
-                    // This prevents creating a session for a track that might not send audio (e.g. silence).
-
                 } else if (data.event === 'media') {
                     const track = data.media.track;
-                    const payload = data.media.payload; // Base64 audio
+                    const payload = data.media.payload;
 
                     if (callSid) {
-                        const call = CallManager.getCall(callSid); // Context already set
+                        const call = CallManager.getCall(callSid);
 
-                        // Calculate speakers (Logic remains same)
-                        // Extract direction from the WebSocket request URL
-                        const urlParams = new URLSearchParams(req.url.split('?')[1]);
-                        const direction = urlParams.get('direction') || 'inbound';
+                        // Resolve Role
+                        const role = resolveRole(track, callDirection);
 
-                        let inboundSpeaker = 'customer';
-                        let outboundSpeaker = 'agent';
-
-                        if (direction === 'outbound') {
-                            inboundSpeaker = 'agent';
-                            outboundSpeaker = 'customer';
-                        } else {
-                            inboundSpeaker = 'customer';
-                            outboundSpeaker = 'agent';
+                        // Ensure session exists
+                        if (!call.sonioxSockets[role]) {
+                            call.sonioxSockets[role] = SonioxService.createSession(callSid, role, (text, isFinal) => {
+                                // Pass resolved role props explicitly
+                                handleTranscript(callSid, role, text, isFinal, track, callDirection);
+                            });
                         }
-
-                        // DEBUG: Log Media Flow
-                        // call.frameCounters is not defined in manager, let's attach locally or extend manager
-                        if (!call.frameCounters) call.frameCounters = { inbound: 0, outbound: 0 };
-                        call.frameCounters[track]++;
-
-                        if (call.frameCounters[track] % 20 === 0) {
-                            console.log(`[Twilio] Stream active: ${call.frameCounters[track]} frames from ${track}`);
-                        }
-
-                        // --- DUMMY MODE REMOVED ---
-
-                        // We map the Twilio track to the correct Soniox Session
-                        // Ensure sessions exist for roles
-                        if (track === 'inbound') {
-                            const role = inboundSpeaker;
-                            if (!call.sonioxSockets[role]) {
-                                call.sonioxSockets[role] = SonioxService.createSession(callSid, role, (text, isFinal) => {
-                                    handleTranscript(callSid, role, text, isFinal);
-                                });
-                            }
-                            call.sonioxSockets[role].sendAudio(Buffer.from(payload, 'base64'));
-
-                        } else if (track === 'outbound') {
-                            const role = outboundSpeaker;
-                            if (!call.sonioxSockets[role]) {
-                                call.sonioxSockets[role] = SonioxService.createSession(callSid, role, (text, isFinal) => {
-                                    handleTranscript(callSid, role, text, isFinal);
-                                });
-                            }
-                            call.sonioxSockets[role].sendAudio(Buffer.from(payload, 'base64'));
-                        }
+                        call.sonioxSockets[role].sendAudio(Buffer.from(payload, 'base64'));
                     }
 
                 } else if (data.event === 'stop') {
-                    console.log("⏹ Twilio stream stopped", {
-                        streamSid: data.streamSid,
-                        time: new Date().toISOString(),
-                    });
                     console.log(`[Twilio] Stream stopped for ${callSid}`);
                     CallManager.cleanupCall(callSid);
                 }
@@ -228,22 +200,27 @@ async function registerTwilioRoutes(fastify) {
         });
 
         ws.on('close', () => {
-            console.log(`[Twilio] Socket closed for ${callSid}`);
             if (callSid) CallManager.cleanupCall(callSid);
         });
     });
 
     // Helper to process transcripts
-    const handleTranscript = async (callSid, role, text, isFinal) => {
+    const handleTranscript = async (callSid, role, text, isFinal, rawTrack, callDirection) => {
         try {
-            // Safely check if call exists before processing (Soniox might send trailing messages)
-            // We catch getCall errors implicitly or explicit check
-            // CallManager.getCall will throw if call is missing and no context provided
+            // EXPLICT ROLE VERIFICATION LOG
+            console.log("[Role-Mapping] Transcript", {
+                callId: callSid,
+                twilioDirection: callDirection,
+                track: rawTrack,
+                role: role,
+                isFinal: isFinal,
+                text: text.substring(0, 60)
+            });
 
             // 1. Update State & Broadcast to UI (Transcript)
             CallManager.addTranscript(callSid, role, text, isFinal);
 
-            // Broadcast to UI for real-time display
+            // Broadcast to UI
             CallManager.broadcastToFrontend(callSid, {
                 type: 'transcript',
                 role: role,
@@ -252,31 +229,27 @@ async function registerTwilioRoutes(fastify) {
                 timestamp: Date.now()
             });
 
-            console.log(`[Twilio] Broadcast Transcript for ${callSid}: ${role} - "${text.substring(0, 30)}..." [Final: ${isFinal}]`);
-
             // 2. Trigger Coaching Logic
             // --- CRITICAL: TRIGGER CONDITIONS ---
             // a) Must be FINAL
-            // b) Must be CUSTOMER (inbound audio mapped to 'customer' role)
+            // b) Must be CUSTOMER
             if (isFinal && role === 'customer') {
                 const call = CallManager.getCall(callSid);
+
+                // Extra safety check in logs
+                console.log(`[Coaching-Trigger] Valid Customer Final: "${text.substring(0, 20)}..."`);
+
                 const account = TenantStore.getAccount(call.accountId);
-
                 const history = call.transcripts;
-
-                // Merge and sort context
                 const mixedHistory = [
                     ...history.customer.map(t => ({ role: 'customer', text: t.text, timestamp: t.timestamp })),
                     ...history.agent.map(t => ({ role: 'agent', text: t.text, timestamp: t.timestamp }))
                 ].sort((a, b) => a.timestamp - b.timestamp);
 
-                // Take last 10
                 const recentContext = mixedHistory.slice(-10);
-
                 const advice = await CoachingEngine.generateCoaching(call, account.config, recentContext);
 
                 if (advice) {
-                    // Update State
                     call.lastCoachingTime = Date.now();
                     call.coachingHistory.push({
                         type: advice.type,
@@ -284,18 +257,17 @@ async function registerTwilioRoutes(fastify) {
                         timestamp: Date.now()
                     });
 
-                    // Broadcast coaching to UI (Standardized Contract)
                     CallManager.broadcastToFrontend(callSid, {
                         type: 'coaching',
-                        severity: advice.severity || 'info', // Default if missing
-                        role: 'system', // It's from the system
+                        severity: advice.severity || 'info',
+                        role: 'system',
                         message: advice.message,
                         suggested_reply: advice.suggested_reply
                     });
                 }
             }
         } catch (err) {
-            console.warn(`[Handler] Error processing transcript for ${callSid} (Call likely ended):`, err.message);
+            console.warn(`[Handler] Error processing transcript for ${callSid}:`, err.message);
         }
     };
 }
