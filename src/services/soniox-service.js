@@ -13,13 +13,14 @@ class SonioxService {
     createSession(callSid, track, onTranscript) {
         // track is 'inbound' (customer) or 'outbound' (agent)
 
-        // Config as requested
-        const model = process.env.SONIOX_MODEL || "en_v2_lowlatency";
+        // Config as requested - HEBREW OPTIMIZED
+        // If provided via env, use it, otherwise default to Hebrew Low Latency
+        const model = process.env.SONIOX_MODEL || "he_v2_lowlatency";
 
         // Config matching Soniox v3 Real-time docs
         const config = {
             api_key: this.apiKey,
-            model: "stt-rt-v3",
+            model: model, // Using Hebrew model
 
             // Audio format
             audio_format: "mulaw",
@@ -27,25 +28,29 @@ class SonioxService {
             num_channels: 1,
 
             // Languages: Hebrew only (Strict)
-            // We remove 'en' to prevent detecting English/Arabic false positives
             language_hints: ["he"],
-            enable_language_identification: true,
+            enable_language_identification: false, // Turn off ID to force Hebrew focus
 
             // Features
             enable_endpoint_detection: true,
-            enable_speaker_diarization: false // We handle speaker separation via Twilio tracks (agent vs customer stream)
+            enable_speaker_diarization: false
         };
+
+        console.log("[Soniox] Creating stream for", callSid, track, {
+            model: config.model,
+            languages: config.language_hints,
+            sampleRateHz: config.sample_rate,
+        });
 
         const ws = new WebSocket(SONIOX_URL);
 
-        // Maintain local transcript state for this stream to handle deduping if needed locally,
-        // although the CallManager handles the detailed aggregation. 
-        // Soniox sends absolute offsets or incremental updates.
-        // We will trust the `is_final` flag and the text provided.
+        // State for Deduplication
+        let lastFinalText = "";
+        let lastPartialText = "";
+        let lastBroadcastTime = 0;
 
         ws.on('open', () => {
-            console.log(`[Soniox] Opening stream for ${callSid} (${track}) using model: ${model}`);
-            // Send config immediately
+            console.log(`[Soniox] Opening stream for ${callSid} (${track}) using model: ${config.model}`);
             ws.send(JSON.stringify(config));
         });
 
@@ -53,7 +58,6 @@ class SonioxService {
             try {
                 const response = JSON.parse(data);
 
-                // Error handling
                 if (response.error_code) {
                     console.error(`[Soniox] API Error for ${callSid} (${track}): ${response.error_code} - ${response.error_message}`);
                     return;
@@ -65,24 +69,51 @@ class SonioxService {
                 const finalTokens = response.tokens.filter(t => t.is_final);
                 const nonFinalTokens = response.tokens.filter(t => !t.is_final);
 
-                // 1. Emit Final Text (if any)
+                // 1. PROCESS FINAL UTTERANCE
                 if (finalTokens.length > 0) {
-                    let finalText = finalTokens.map(t => t.text).join("");
-                    // Clean <end> tokens and trim
-                    finalText = finalText.replace(/<end>/gi, '').trim();
+                    let finalText = finalTokens.map(t => t.text).join("").replace(/<end>/gi, '').trim();
 
-                    if (finalText) {
+                    if (finalText && finalText.length > 0) {
+                        // Dedup: Ignore if identical to last final
+                        if (finalText === lastFinalText) {
+                            console.log(`[Coach-Transcript] Skipped duplicate final: "${finalText.slice(0, 20)}..."`);
+                            return;
+                        }
+
+                        lastFinalText = finalText;
+                        lastPartialText = ""; // Reset partial tracking
+
+                        console.log("[Coach-Transcript] Outgoing FINAL", {
+                            callId: callSid,
+                            role: track, // 'inbound' or 'outbound'
+                            text: finalText.slice(0, 50)
+                        });
+
                         onTranscript(finalText, true);
                     }
                 }
 
-                // 2. Emit Non-Final Text (if any)
+                // 2. PROCESS PARTIAL UTTERANCE
                 if (nonFinalTokens.length > 0) {
-                    let partialText = nonFinalTokens.map(t => t.text).join("");
-                    // Clean <end> tokens and trim
-                    partialText = partialText.replace(/<end>/gi, '').trim();
+                    let partialText = nonFinalTokens.map(t => t.text).join("").replace(/<end>/gi, '').trim();
 
-                    if (partialText) {
+                    if (partialText && partialText.length > 0) {
+                        // Dedup: Ignore if identical to last partial
+                        if (partialText === lastPartialText) return;
+
+                        // Rate Limit: Only 1 partial per 100ms per role
+                        // (Optional, keeps UI fresher but cheaper)
+                        // const now = Date.now();
+                        // if (now - lastBroadcastTime < 100) return;
+                        // lastBroadcastTime = now;
+
+                        lastPartialText = partialText;
+
+                        // We check confidence here? Soniox tokens have confidence?
+                        // If we want to filter low confidence partials:
+                        // const avgConf = nonFinalTokens.reduce((sum, t) => sum + (t.confidence || 0), 0) / nonFinalTokens.length;
+                        // if (avgConf < 0.6) return; // Example
+
                         onTranscript(partialText, false);
                     }
                 }
@@ -94,7 +125,6 @@ class SonioxService {
 
         ws.on('error', (err) => {
             console.error(`[Soniox] Error for ${callSid} (${track}):`, err.message);
-            // Don't throw, just log. The session might be dead but keep the stream alive.
         });
 
         ws.on('close', () => {
@@ -104,9 +134,6 @@ class SonioxService {
         return {
             sendAudio: (audioPayload) => {
                 if (ws.readyState === WebSocket.OPEN) {
-                    // Send raw binary or hex? 
-                    // Usually STT websockets expect binary or JSON wrapped.
-                    // Soniox docs: Binary messages for audio.
                     ws.send(audioPayload);
                 }
             },
