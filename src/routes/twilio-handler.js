@@ -93,7 +93,10 @@ async function registerTwilioRoutes(fastify) {
 
     // 2. WebSocket Endpoint for Media Stream
     fastify.get('/twilio-stream', { websocket: true }, (connection, req) => {
-        console.log('[Twilio] Stream connected');
+        console.log("🔌 New Twilio media stream connection", {
+            url: req.url,
+            time: new Date().toISOString(),
+        });
         const ws = connection.socket || connection;
 
         let callSid = null;
@@ -102,6 +105,16 @@ async function registerTwilioRoutes(fastify) {
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
+
+                // INSTRUMENTATION: Log incoming event
+                console.log("🎧 Twilio media event", {
+                    event: data.event,
+                    streamSid: data.streamSid,
+                    track: data.media?.track,
+                    chunk: data.media?.chunk,
+                    timestamp: data.media?.timestamp,
+                    payloadLength: data.media?.payload?.length,
+                });
 
                 if (data.event === 'start') {
                     callSid = data.start.callSid;
@@ -202,6 +215,10 @@ async function registerTwilioRoutes(fastify) {
                     }
 
                 } else if (data.event === 'stop') {
+                    console.log("⏹ Twilio stream stopped", {
+                        streamSid: data.streamSid,
+                        time: new Date().toISOString(),
+                    });
                     console.log(`[Twilio] Stream stopped for ${callSid}`);
                     CallManager.cleanupCall(callSid);
                 }
