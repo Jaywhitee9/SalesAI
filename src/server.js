@@ -18,6 +18,14 @@ fastify.register(fastifyWs);
 fastify.register(fastifyStatic, {
     root: path.join(__dirname, '../public'),
     prefix: '/', // optional: default '/'
+    setHeaders: (res, path, stat) => {
+        // Prevent caching of index.html so updates are seen immediately
+        if (path.endsWith('index.html')) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        }
+    }
 });
 
 // Import Routes
@@ -100,6 +108,10 @@ fastify.setNotFoundHandler((request, reply) => {
     if (request.raw.url.startsWith('/api')) {
         reply.status(404).send({ error: 'Not Found', url: request.raw.url });
     } else {
+        // Prevent caching for the fallback index.html as well
+        reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        reply.header('Pragma', 'no-cache');
+        reply.header('Expires', '0');
         reply.sendFile('index.html');
     }
 });
