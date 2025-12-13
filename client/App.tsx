@@ -47,12 +47,14 @@ function App() {
     callDuration,
     isReady,
     connectionStatus,
+    callStatus,
     hangup,
     isOnCall
   } = useCall();
 
   // Initialize Device on login/mount
   useEffect(() => {
+    console.log("App Version: Verify Fix Applied - 1.1");
     if (isAuthenticated && !isReady) {
       initDevice();
     }
@@ -167,8 +169,8 @@ function App() {
                   isDarkMode={isDarkMode}
                 />
               ) : (
-                // Live Call View Layout
-                (isOnCall || connectionStatus === 'connecting' || connectionStatus === 'connected') ? (
+                // Live Call View Layout - UPDATED LOGIC
+                (callStatus === 'dialing' || callStatus === 'connected' || callStatus === 'reconnecting') ? (
                   <>
                     <CallStatusPanel
                       stages={CALL_STAGES.map(s => ({
@@ -191,7 +193,7 @@ function App() {
                         type: 'tip'
                       }] : AI_COACH_MESSAGES}
                       onHangup={hangup}
-                      status={connectionStatus === 'connected' ? 'connected' : connectionStatus === 'connecting' ? 'מתקשר...' : 'מנותק'}
+                      status={callStatus === 'connected' ? 'connected' : 'מתקשר...'}
                       duration={formatDuration(callDuration)}
                     />
 

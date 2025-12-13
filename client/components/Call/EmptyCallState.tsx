@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Phone, Clock, Delete } from 'lucide-react';
+import { Phone, Search, Clock, Hash, User, ArrowLeft, Delete } from 'lucide-react';
+import { Button } from '../Common/Button';
 import { REP_LEAD_QUEUE } from '../../constants';
 
 interface EmptyCallStateProps {
@@ -17,12 +18,8 @@ export const EmptyCallState: React.FC<EmptyCallStateProps> = ({ onStartCall }) =
         setDialNumber(prev => prev.slice(0, -1));
     };
 
-    const handleCall = () => {
-        onStartCall(dialNumber || undefined);
-    }
-
     return (
-        <div className="flex flex-col lg:flex-row h-full bg-slate-50 dark:bg-slate-950 font-sans overflow-auto lg:overflow-hidden w-full">
+        <div className="flex flex-col lg:flex-row h-full bg-slate-50 dark:bg-slate-950 font-sans overflow-auto lg:overflow-hidden">
 
             {/* Right Side: Dialer (Main Area) */}
             <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-8 lg:border-l border-slate-200 dark:border-slate-800 min-h-[500px]">
@@ -46,12 +43,12 @@ export const EmptyCallState: React.FC<EmptyCallStateProps> = ({ onStartCall }) =
                     </div>
 
                     {/* Keypad */}
-                    <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-8 lg:mb-10 w-full">
+                    <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-8 lg:mb-10">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, '*', 0, '#'].map((key) => (
                             <button
                                 key={key}
                                 onClick={() => handleDigit(key.toString())}
-                                className="aspect-square rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center transition-all hover:border-brand-300 hover:shadow-md hover:scale-105 active:scale-95 group mx-auto w-16 h-16 sm:w-20 sm:h-20"
+                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center transition-all hover:border-brand-300 hover:shadow-md hover:scale-105 active:scale-95 group"
                             >
                                 <span className="text-xl sm:text-2xl font-medium text-slate-700 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400">{key}</span>
                                 {typeof key === 'number' && key > 1 && key < 10 && (
@@ -66,7 +63,7 @@ export const EmptyCallState: React.FC<EmptyCallStateProps> = ({ onStartCall }) =
                     {/* Call Button */}
                     <div className="flex justify-center items-center gap-6 w-full">
                         <button
-                            onClick={handleCall}
+                            onClick={() => onStartCall(dialNumber)}
                             className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center hover:bg-emerald-600 hover:scale-105 active:scale-95 transition-all"
                         >
                             <Phone className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />

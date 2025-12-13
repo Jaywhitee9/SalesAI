@@ -14,6 +14,7 @@ interface CallContextType {
     device: Device | null;
     activeCall: Call | null;
     connectionStatus: string; // 'disconnected', 'connecting', 'connected', 'error'
+    callStatus: string; // 'idle' | 'dialing' | 'connected' | 'reconnecting'
     isReady: boolean;
     isOnCall: boolean;
     callDuration: number;
@@ -35,7 +36,11 @@ export const useCall = () => {
 export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [device, setDevice] = useState<Device | null>(null);
     const [activeCall, setActiveCall] = useState<Call | null>(null);
+    // Device Connection Status: 'disconnected' | 'connecting' | 'ready' | 'error'
     const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
+    // Active Call Status: 'idle' | 'dialing' | 'connected' | 'reconnecting'
+    const [callStatus, setCallStatus] = useState<string>('idle');
+
     const [isReady, setIsReady] = useState(false);
     const [isOnCall, setIsOnCall] = useState(false);
     const [callDuration, setCallDuration] = useState(0);
@@ -52,6 +57,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Initialize Twilio Device
     const initDevice = async () => {
         try {
+            if (connectionStatus === 'ready') return;
             setConnectionStatus('connecting');
             const res = await fetch('/api/token');
             if (!res.ok) throw new Error('Failed to fetch token');
@@ -84,7 +90,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Timer Logic
     useEffect(() => {
-        if (isOnCall) {
+        if (callStatus === 'connected') {
             timerRef.current = setInterval(() => {
                 setCallDuration((prev) => prev + 1);
             }, 1000);
@@ -95,7 +101,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [isOnCall]);
+    }, [callStatus]);
 
     // WebSocket Logic
     const connectWS = (callSid: string) => {
@@ -157,13 +163,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!device) return;
 
         try {
-            setConnectionStatus('connecting');
+            setCallStatus('dialing');
+            setIsOnCall(true);
             const call = await device.connect({ params: { target_number: phone } });
 
             call.on('accept', () => {
                 console.log('Call Accepted');
-                setIsOnCall(true);
-                setConnectionStatus('connected');
+                setCallStatus('connected');
                 setActiveCall(call);
                 // @ts-ignore
                 const sid = call.parameters.CallSid;
@@ -173,23 +179,28 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             call.on('disconnect', () => {
                 console.log('Call Disconnected');
                 setIsOnCall(false);
+                setCallStatus('idle');
                 setActiveCall(null);
-                setConnectionStatus('ready'); // Reset status so UI reverts
                 if (wsRef.current) wsRef.current.close();
             });
 
             call.on('error', (err) => {
                 console.error('Call Error', err);
+                setCallStatus('idle');
+                setIsOnCall(false);
             });
 
         } catch (err) {
             console.error('Start Call Error', err);
+            setCallStatus('idle');
+            setIsOnCall(false);
         }
     };
 
     const hangup = () => {
         if (activeCall) activeCall.disconnect();
         else if (device) device.disconnectAll();
+        setCallStatus('idle');
     };
 
     return (
@@ -197,6 +208,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             device,
             activeCall,
             connectionStatus,
+            callStatus,
             isReady,
             isOnCall,
             callDuration,
