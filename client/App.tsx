@@ -71,6 +71,9 @@ function App() {
   // State for current user/role (Rep vs Manager)
   const [currentUser, setCurrentUser] = useState<User>(CURRENT_USER);
 
+  // State for selected lead in the Dialer (Pre-call)
+  const [selectedPreCallLead, setSelectedPreCallLead] = useState<User | null>(CURRENT_LEAD);
+
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
@@ -179,18 +182,9 @@ function App() {
                   {/* LEFT PANEL: Leads List (Persistent) */}
                   <LeadsListSidebar
                     onSelectLead={(lead) => {
-                      // Assuming we add a state for selectedPreCallLead in App in next step if we want persistence
-                      // For now we just call immediately or update context?
-                      // Let's assume the user wants to CLICK to fill dialer.
-                      // We'll update a local state inside App or Context?
-                      // Ideally App should manage 'selectedLeadForDialing'
-                      // But for this quick replacement, we might lack the state variable in App function signature.
-                      // I will use a ref or just console log if I can't add state comfortably in one go?
-                      // Wait, I can't easily add state to App component via replace_file_content in the middle.
-                      // I will assume CURRENT_LEAD for now or find a way.
-                      console.log("Selected lead:", lead);
+                      setSelectedPreCallLead(lead);
                     }}
-                  // selectedLeadId={CURRENT_LEAD.id} 
+                    selectedLeadId={selectedPreCallLead?.id}
                   />
 
                   {/* CENTER PANEL: Dialer / Active Call */}
@@ -210,9 +204,9 @@ function App() {
                     ) : (
                       <EmptyCallState
                         onStartCall={(number) => {
-                          startCall(number || CURRENT_LEAD.phone).catch(console.error);
+                          startCall(number || selectedPreCallLead?.phone).catch(console.error);
                         }}
-                        selectedLead={CURRENT_LEAD} // Passing default lead for demo
+                        selectedLead={selectedPreCallLead}
                       />
                     )}
                   </div>
@@ -228,7 +222,7 @@ function App() {
                             status: coachingData.stageStatus?.[s.label] ||
                               (s.label === coachingData.stage ? 'current' : 'upcoming')
                           }))}
-                          lead={CURRENT_LEAD}
+                          lead={selectedPreCallLead || CURRENT_LEAD}
                           duration={formatDuration(callDuration)}
                           isDarkMode={isDarkMode}
                           sentiment="neutral"
