@@ -39,6 +39,7 @@ fastify.register(async function (fastify) {
     await registerClientRoutes(fastify);
     await registerOutboundRoutes(fastify);
     await require('./routes/token-handler')(fastify);
+    await require('./routes/api-handler')(fastify);
 });
 
 fastify.get('/health', async (request, reply) => {
