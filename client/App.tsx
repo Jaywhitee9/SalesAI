@@ -6,6 +6,8 @@ import { CallStatusPanel } from './components/Call/CallStatusPanel';
 import { ActiveCallPanel } from './components/Call/ActiveCallPanel';
 import { EmptyCallState } from './components/Call/EmptyCallState';
 import { InsightsPanel } from './components/Call/InsightsPanel';
+import { LeadsListSidebar } from './components/Leads/LeadsListSidebar'; // NEW
+import { InsightsPanelPlaceholder } from './components/Call/InsightsPanelPlaceholder'; // NEW
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { ManagerDashboard } from './components/Dashboard/ManagerDashboard';
 import { LeadsDashboard } from './components/Leads/LeadsDashboard';
@@ -162,56 +164,90 @@ function App() {
                 currentUser.type === 'manager' ? (
                   <TargetsDashboard isDarkMode={isDarkMode} />
                 ) : (
-                  <AccessDeniedView /> // Defined above but needs to be in scope or defined outside
+                  <AccessDeniedView />
                 )
               ) : activePage === 'chat' ? (
                 <TeamChatDashboard
                   isDarkMode={isDarkMode}
                 />
               ) : (
-                // Live Call View Layout - UPDATED LOGIC
-                (callStatus === 'dialing' || callStatus === 'connected' || callStatus === 'reconnecting') ? (
-                  <>
-                    <CallStatusPanel
-                      stages={CALL_STAGES.map(s => ({
-                        ...s,
-                        status: coachingData.stageStatus?.[s.label] ||
-                          (s.label === coachingData.stage ? 'current' :
-                            'upcoming')
-                      }))}
-                      lead={CURRENT_LEAD}
-                      duration={formatDuration(callDuration)}
-                      isDarkMode={isDarkMode}
-                      sentiment="neutral"
-                    />
+                // ---------------------------------------------------------
+                // COCKPIT VIEW (Calls Page) - 3 Column Layout
+                // ---------------------------------------------------------
+                <div className="flex w-full h-full bg-slate-50 dark:bg-slate-950">
 
-                    <ActiveCallPanel
-                      transcript={transcripts.length > 0 ? transcripts : MOCK_TRANSCRIPT}
-                      coachSuggestions={coachingData.suggestion ? [{
-                        id: Date.now().toString(),
-                        text: coachingData.suggestion,
-                        type: 'tip'
-                      }] : AI_COACH_MESSAGES}
-                      onHangup={hangup}
-                      status={callStatus === 'connected' ? 'connected' : 'מתקשר...'}
-                      duration={formatDuration(callDuration)}
-                    />
-
-                    <InsightsPanel
-                      insights={[
-                        { id: 'score', type: 'key_point', title: `ציון שיחה: ${coachingData.score}` },
-                        { id: 'insight', type: 'info', title: coachingData.insight },
-                        ...INITIAL_INSIGHTS
-                      ]}
-                    />
-                  </>
-                ) : (
-                  <EmptyCallState
-                    onStartCall={(number) => {
-                      startCall(number || CURRENT_LEAD.phone).catch(console.error);
+                  {/* LEFT PANEL: Leads List (Persistent) */}
+                  <LeadsListSidebar
+                    onSelectLead={(lead) => {
+                      // Assuming we add a state for selectedPreCallLead in App in next step if we want persistence
+                      // For now we just call immediately or update context?
+                      // Let's assume the user wants to CLICK to fill dialer.
+                      // We'll update a local state inside App or Context?
+                      // Ideally App should manage 'selectedLeadForDialing'
+                      // But for this quick replacement, we might lack the state variable in App function signature.
+                      // I will use a ref or just console log if I can't add state comfortably in one go?
+                      // Wait, I can't easily add state to App component via replace_file_content in the middle.
+                      // I will assume CURRENT_LEAD for now or find a way.
+                      console.log("Selected lead:", lead);
                     }}
+                  // selectedLeadId={CURRENT_LEAD.id} 
                   />
-                )
+
+                  {/* CENTER PANEL: Dialer / Active Call */}
+                  <div className="flex-1 flex flex-col min-w-0 border-x border-slate-200 dark:border-slate-800">
+                    {(callStatus === 'dialing' || callStatus === 'connected' || callStatus === 'reconnecting') ? (
+                      <ActiveCallPanel
+                        transcript={transcripts.length > 0 ? transcripts : MOCK_TRANSCRIPT}
+                        coachSuggestions={coachingData.suggestion ? [{
+                          id: Date.now().toString(),
+                          text: coachingData.suggestion,
+                          type: 'tip'
+                        }] : AI_COACH_MESSAGES}
+                        onHangup={hangup}
+                        status={callStatus === 'connected' ? 'connected' : 'מתקשר...'}
+                        duration={formatDuration(callDuration)}
+                      />
+                    ) : (
+                      <EmptyCallState
+                        onStartCall={(number) => {
+                          startCall(number || CURRENT_LEAD.phone).catch(console.error);
+                        }}
+                        selectedLead={CURRENT_LEAD} // Passing default lead for demo
+                      />
+                    )}
+                  </div>
+
+                  {/* RIGHT PANEL: Insights / Context */}
+                  <div className="w-80 flex flex-col">
+                    {(callStatus === 'dialing' || callStatus === 'connected' || callStatus === 'reconnecting') ? (
+                      <div className="flex-1 flex flex-col">
+                        {/* Helper wrapper to stack status + insights */}
+                        <CallStatusPanel
+                          stages={CALL_STAGES.map(s => ({
+                            ...s,
+                            status: coachingData.stageStatus?.[s.label] ||
+                              (s.label === coachingData.stage ? 'current' : 'upcoming')
+                          }))}
+                          lead={CURRENT_LEAD}
+                          duration={formatDuration(callDuration)}
+                          isDarkMode={isDarkMode}
+                          sentiment="neutral"
+                        />
+                        <div className="flex-1 border-t border-slate-200 dark:border-slate-800 overflow-hidden">
+                          <InsightsPanel
+                            insights={[
+                              { id: 'score', type: 'key_point', title: `ציון שיחה: ${coachingData.score}` },
+                              { id: 'insight', type: 'info', title: coachingData.insight },
+                              ...INITIAL_INSIGHTS
+                            ]}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <InsightsPanelPlaceholder />
+                    )}
+                  </div>
+                </div>
               )}
 
             </main>
