@@ -8,6 +8,7 @@ import { EmptyCallState } from './components/Call/EmptyCallState';
 import { InsightsPanel } from './components/Call/InsightsPanel';
 import { LeadsListSidebar } from './components/Leads/LeadsListSidebar'; // NEW
 import { InsightsPanelPlaceholder } from './components/Call/InsightsPanelPlaceholder'; // NEW
+import { CallSummaryModal } from './components/Call/CallSummaryModal'; // NEW
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { ManagerDashboard } from './components/Dashboard/ManagerDashboard';
 import { LeadsDashboard } from './components/Leads/LeadsDashboard';
@@ -241,6 +242,13 @@ function App() {
                       <InsightsPanelPlaceholder />
                     )}
                   </div>
+
+                  {/* SUMMARY MODAL (Global for Call Context) */}
+                  <CallSummaryModal
+                    isOpen={!!callSummary}
+                    onClose={clearSummary}
+                    summary={callSummary}
+                  />
                 </div>
               )}
 

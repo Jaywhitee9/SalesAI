@@ -1,4 +1,5 @@
-const EventEmitter = require('events');
+const CoachingEngine = require('./coaching-engine');
+const DBService = require('./db-service');
 
 class CallManager extends EventEmitter {
   constructor() {
@@ -6,15 +7,23 @@ class CallManager extends EventEmitter {
     this.calls = new Map();
   }
 
+  // ... (getCall remains same)
+
   getCall(callSid, context = null) {
     if (!this.calls.has(callSid)) {
       if (!context) {
-        throw new Error(`Call ${callSid} not found and no context provided for creation`);
+        // Create a dummy fallback context if missing (e.g. for ghost calls)
+        context = {
+          account: { accountId: 'default', name: 'Default' },
+          agent: { agentId: 'system' }
+        };
+        // throw new Error(`Call ${callSid} not found and no context provided for creation`);
       }
       this.calls.set(callSid, {
         callSid,
         accountId: context.account.accountId,
         agentId: context.agent.agentId,
+        customerNumber: context.customerNumber || 'Unknown', // Ideally passed in context
         sonioxSockets: {
           inbound: null, // Customer
           outbound: null // Agent
@@ -31,6 +40,44 @@ class CallManager extends EventEmitter {
       console.log(`[CallManager] Created state for call ${callSid} [Acc: ${context.account.name}]`);
     }
     return this.calls.get(callSid);
+  }
+
+  /**
+   * Called when stream stops.
+   * Generates summary, saves to DB, checks for success, then cleans up.
+   */
+  async endCall(callSid) {
+    if (!this.calls.has(callSid)) return;
+
+    const call = this.calls.get(callSid);
+    console.log(`[CallManager] Ending call ${callSid}... Generating Summary...`);
+
+    try {
+      // 1. Generate AI Summary
+      const summary = await CoachingEngine.generateSummary(call);
+
+      if (summary) {
+        console.log(`[CallManager] Summary generated: Score ${summary.score}`);
+        call.summary = summary;
+
+        // 2. Broadcast Summary to Frontend (Immediate Feedback)
+        this.broadcastToFrontend(callSid, {
+          type: 'call_summary',
+          data: summary
+        });
+
+        // 3. Save to DB
+        await DBService.saveCall(call);
+      } else {
+        console.warn(`[CallManager] No summary generated for ${callSid} (likely short/empty call)`);
+      }
+
+    } catch (err) {
+      console.error('[CallManager] Error during endCall processing:', err);
+    } finally {
+      // 4. Cleanup
+      this.cleanupCall(callSid);
+    }
   }
 
   cleanupCall(callSid) {

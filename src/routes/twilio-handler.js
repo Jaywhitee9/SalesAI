@@ -192,7 +192,8 @@ async function registerTwilioRoutes(fastify) {
 
                 } else if (data.event === 'stop') {
                     console.log(`[Twilio] Stream stopped for ${callSid}`);
-                    CallManager.cleanupCall(callSid);
+                    // Use endCall to trigger summary generation before cleanup
+                    CallManager.endCall(callSid);
                 }
             } catch (e) {
                 console.error('[Twilio] Error processing message:', e);
@@ -200,7 +201,8 @@ async function registerTwilioRoutes(fastify) {
         });
 
         ws.on('close', () => {
-            if (callSid) CallManager.cleanupCall(callSid);
+            // For socket close, also try to end call gracefully if still active
+            if (callSid) CallManager.endCall(callSid);
         });
     });
 

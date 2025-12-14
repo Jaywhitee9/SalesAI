@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Device, Call } from '@twilio/voice-sdk';
 import { Message, CoachSuggestion } from '../../types';
+import { CallSummaryData } from '../../components/Call/CallSummaryModal';
 
 interface CoachingData {
     score: number;
@@ -20,9 +21,11 @@ interface CallContextType {
     callDuration: number;
     transcripts: Message[];
     coachingData: CoachingData;
+    callSummary: CallSummaryData | null;
     initDevice: () => Promise<void>;
     startCall: (phone: string) => Promise<void>;
     hangup: () => void;
+    clearSummary: () => void;
 }
 
 const CallContext = createContext<CallContextType | null>(null);
@@ -50,6 +53,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         stage: 'פתיחה',
         insight: 'המערכת ממתינה לנתונים...',
     });
+    const [callSummary, setCallSummary] = useState<CallSummaryData | null>(null);
 
     const wsRef = useRef<WebSocket | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -107,7 +111,6 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const connectWS = (callSid: string) => {
         const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${proto}//${window.location.host}/ws/coach?callSid=${callSid}`;
-        // In dev mode, verify port if needed via proxy, but relative path is safest via Vite proxy
 
         wsRef.current = new WebSocket(wsUrl);
 
@@ -124,12 +127,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         speaker: data.role === 'agent' ? 'agent' : 'customer',
                         text: data.text,
                         timestamp: new Date().toLocaleTimeString(),
-                        isFinal: data.isFinal // Custom field, might need type extension
+                        isFinal: data.isFinal
                     } as any;
 
                     setTranscripts(prev => {
-                        // Handle partial updates logic if needed, simplifed for now:
-                        // If last message was partial and same speaker, update it.
                         const last = prev[prev.length - 1];
                         if (last && last.speaker === newMsg.speaker && (last as any).isFinal === false) {
                             const updated = [...prev];
@@ -150,6 +151,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }));
                 }
 
+                if (data.type === 'call_summary') {
+                    console.log('[WS] Received Call Summary:', data.data);
+                    setCallSummary(data.data);
+                }
+
             } catch (e) {
                 console.error('WS Parse Error', e);
             }
@@ -165,6 +171,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             setCallStatus('dialing');
             setIsOnCall(true);
+            // Reset state for new call
+            setTranscripts([]);
+            setCallSummary(null);
+            setCoachingData({ score: 50, stage: 'פתיחה', insight: 'מחבר שיחה...' });
+
             const call = await device.connect({ params: { target_number: phone } });
 
             call.on('accept', () => {
@@ -181,7 +192,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsOnCall(false);
                 setCallStatus('idle');
                 setActiveCall(null);
-                if (wsRef.current) wsRef.current.close();
+                // Dont close WS immediately if you expect summary
+                // But usually summary comes right before disconnect? 
+                // Wait, if server hangs up, it sends summary THEN cleans up.
+                // If client hangs up, we might close WS too fast.
+                // Let's keep WS open for a few seconds or let server close it?
+                // Actually server closes it in cleanupCall.
             });
 
             call.on('error', (err) => {
@@ -203,6 +219,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCallStatus('idle');
     };
 
+    const clearSummary = () => setCallSummary(null);
+
     return (
         <CallContext.Provider value={{
             device,
@@ -214,9 +232,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             callDuration,
             transcripts,
             coachingData,
+            callSummary,
             initDevice,
             startCall,
-            hangup
+            hangup,
+            clearSummary
         }}>
             {children}
         </CallContext.Provider>
