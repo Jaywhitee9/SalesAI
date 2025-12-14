@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Clock, Search, Filter } from 'lucide-react';
-import { MOCK_LEADS } from '../../constants';
 import { Lead } from '../../types';
 
 interface LeadsListSidebarProps {
@@ -10,6 +9,30 @@ interface LeadsListSidebarProps {
 }
 
 export const LeadsListSidebar: React.FC<LeadsListSidebarProps> = ({ onSelectLead, selectedLeadId, className }) => {
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/leads')
+            .then(res => res.json())
+            .then(data => {
+                setLeads(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to fetch leads:', err);
+                setLoading(false);
+            });
+    }, []);
+
+    if (loading) {
+        return (
+            <div className={`w-80 flex items-center justify-center bg-slate-50 dark:bg-slate-900 ${className}`}>
+                <span className="text-slate-400 text-xs">טוען לידים...</span>
+            </div>
+        );
+    }
+
     return (
         <div className={`w-80 flex flex-col border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 ${className}`}>
             {/* Header */}
@@ -40,7 +63,7 @@ export const LeadsListSidebar: React.FC<LeadsListSidebarProps> = ({ onSelectLead
 
             {/* List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {MOCK_LEADS.map(lead => (
+                {leads.map(lead => (
                     <div
                         key={lead.id}
                         onClick={() => onSelectLead(lead)}
@@ -60,8 +83,8 @@ export const LeadsListSidebar: React.FC<LeadsListSidebarProps> = ({ onSelectLead
                                 {lead.name}
                             </div>
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${lead.priority === 'Hot'
-                                    ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-                                    : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                                 }`}>
                                 {lead.score}
                             </span>
