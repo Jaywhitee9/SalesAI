@@ -2,12 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Layout/Sidebar';
 import { TopBar } from './components/Layout/TopBar';
-import { CallStatusPanel } from './components/Call/CallStatusPanel';
 import { ActiveCallPanel } from './components/Call/ActiveCallPanel';
 import { EmptyCallState } from './components/Call/EmptyCallState';
-import { InsightsPanel } from './components/Call/InsightsPanel';
 import { LeadsListSidebar } from './components/Leads/LeadsListSidebar'; // NEW
-import { InsightsPanelPlaceholder } from './components/Call/InsightsPanelPlaceholder'; // NEW
 import { KPISidebar } from './components/Call/KPISidebar'; // NEW
 import { CallSummaryModal } from './components/Call/CallSummaryModal'; // NEW
 import { Dashboard } from './components/Dashboard/Dashboard';

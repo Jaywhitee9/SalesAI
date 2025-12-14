@@ -8,115 +8,60 @@ interface EmptyCallStateProps {
 }
 
 export const EmptyCallState: React.FC<EmptyCallStateProps> = ({ onStartCall, selectedLead }) => {
-
-    const handleBackspace = () => {
-        setDialNumber(prev => prev.slice(0, -1));
-    };
-
     return (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 font-sans relative overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
 
-            {/* Background Decoration */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500/5 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
-            </div>
+            {/* Central Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800 p-12 max-w-lg w-full text-center">
 
-            {/* Active Lead Summary Card (Floating Above Dialer) */}
-            {selectedLead ? (
-                <div className="mb-8 w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-4 fade-in duration-300 z-10">
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg">
-                                {selectedLead.name.charAt(0)}
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-slate-900 dark:text-white text-lg">{selectedLead.name}</h3>
-                                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                    <Briefcase className="w-3 h-3" />
-                                    {selectedLead.company}
-                                </div>
-                            </div>
-                        </div>
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${selectedLead.priority === 'Hot'
-                            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                            }`}>
-                            {selectedLead.score} נק׳
-                        </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg text-slate-600 dark:text-slate-300 text-center">
-                            מקור: {selectedLead.source}
-                        </div>
-                        <div className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg text-slate-600 dark:text-slate-300 text-center">
-                            סטטוס: {selectedLead.status}
-                        </div>
-                    </div>
+                {/* Icon */}
+                <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100 dark:border-slate-700">
+                    <Phone className="w-8 h-8 text-slate-400 dark:text-slate-500" />
                 </div>
-            ) : (
-                <div className="mb-8 h-32 flex items-center justify-center text-slate-400 text-sm animate-in fade-in">
-                    בחר ליד מהרשימה או חייג ידנית
-                </div>
-            )}
 
-            {/* Refined Dialer Card */}
-            <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-800 z-10 transition-all">
+                {/* Title */}
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                    מוכן להתחיל?
+                </h2>
 
-                {/* Number Display */}
-                <div className="mb-8 relative">
-                    <div className="h-16 flex items-center justify-center">
-                        <span className="text-4xl font-mono font-medium text-slate-900 dark:text-white tracking-widest h-10 truncate px-8">
-                            {dialNumber || <span className="text-slate-200 dark:text-slate-800 text-3xl">...</span>}
-                        </span>
-                    </div>
-                    {dialNumber && (
-                        <button
-                            onClick={handleBackspace}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                        >
-                            <Delete className="w-6 h-6" />
+                {/* Subtext */}
+                <p className="text-slate-500 dark:text-slate-400 text-lg mb-10 leading-relaxed max-w-sm mx-auto">
+                    בחר קמפיין כדי להתחיל את החייגן האוטומטי ולדבר עם הליד הבא בתור.
+                </p>
+
+                {/* Controls Row */}
+                <div className="grid grid-cols-5 gap-4">
+
+                    {/* Campaign Selector (Right - 3 cols) */}
+                    <div className="col-span-3 relative">
+                        <label className="absolute -top-2.5 right-3 bg-white dark:bg-slate-900 px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            קמפיין
+                        </label>
+                        <button className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 text-right hover:border-brand-300 dark:hover:border-brand-700 transition-colors group">
+                            <span className="font-medium text-slate-700 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                                Q4 Promotion
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-slate-400" />
                         </button>
-                    )}
-                </div>
+                    </div>
 
-                {/* Keypad */}
-                <div className="grid grid-cols-3 gap-x-6 gap-y-6 mb-8">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, '*', 0, '#'].map((key) => (
-                        <button
-                            key={key}
-                            onClick={() => handleDigit(key.toString())}
-                            className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 text-slate-900 dark:text-white shadow-sm border border-slate-100 dark:border-slate-800/50 flex items-center justify-center transition-all hover:shadow-md hover:scale-105 active:scale-95 text-2xl font-light"
-                        >
-                            {key}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Call Action */}
-                <div className="flex justify-center">
+                    {/* Start Button (Left - 2 cols) */}
                     <button
-                        onClick={() => onStartCall(dialNumber)}
-                        disabled={!dialNumber}
-                        className={`
-                            h-16 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20 transition-all duration-300
-                            ${dialNumber
-                                ? 'w-full bg-emerald-500 hover:bg-emerald-600 text-white scale-100 hover:shadow-emerald-500/40'
-                                : 'w-16 bg-emerald-100 text-emerald-300 dark:bg-emerald-900/20 dark:text-emerald-800 cursor-not-allowed'}
-                        `}
+                        onClick={() => onStartCall(selectedLead?.phone)}
+                        className="col-span-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-brand-500/25 transition-all active:scale-95"
                     >
-                        <Phone className={`w-7 h-7 fill-current ${dialNumber ? 'animate-pulse' : ''}`} />
-                        {dialNumber && <span className="ml-3 text-lg font-bold">חייג עכשיו</span>}
+                        <Play className="w-5 h-5 fill-white" />
+                        הפעל חייגן
                     </button>
                 </div>
+
             </div>
 
-            {/* Footer / Meta */}
-            <div className="mt-8 text-center">
-                <p className="text-xs text-slate-400 dark:text-slate-600">
-                    מחובר ל-Twinio Voice באמצעות <span className="font-semibold text-brand-500">SalesAI</span>
-                </p>
-            </div>
+            {/* Footer Info */}
+            <p className="mt-8 text-sm text-slate-400">
+                מערכת ה-AI תלווה אותך בזמן אמת במהלך השיחה
+            </p>
+
         </div>
     );
 };
