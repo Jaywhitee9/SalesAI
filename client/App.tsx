@@ -249,7 +249,12 @@ function App() {
                   <CallSummaryModal
                     isOpen={!!callSummary}
                     onClose={clearSummary}
-                    summary={callSummary}
+                    onSave={(data) => {
+                      console.log("Saving call outcome:", data);
+                      clearSummary();
+                    }}
+                    leadName={selectedPreCallLead?.name || CURRENT_LEAD.name}
+                    aiSummary={callSummary}
                   />
                 </div>
               )}

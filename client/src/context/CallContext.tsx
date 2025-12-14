@@ -192,53 +192,46 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsOnCall(false);
                 setCallStatus('idle');
                 setActiveCall(null);
-                // Dont close WS immediately if you expect summary
-                // But usually summary comes right before disconnect? 
-                // Wait, if server hangs up, it sends summary THEN cleans up.
-                // If client hangs up, we might close WS too fast.
-                // Let's keep WS open for a few seconds or let server close it?
-                // Actually server closes it in cleanupCall.
-            });
 
-            call.on('error', (err) => {
-                console.error('Call Error', err);
+                call.on('error', (err) => {
+                    console.error('Call Error', err);
+                    setCallStatus('idle');
+                    setIsOnCall(false);
+                });
+
+            } catch (err) {
+                console.error('Start Call Error', err);
                 setCallStatus('idle');
                 setIsOnCall(false);
-            });
+            }
+        };
 
-        } catch (err) {
-            console.error('Start Call Error', err);
+        const hangup = () => {
+            if (activeCall) activeCall.disconnect();
+            else if (device) device.disconnectAll();
             setCallStatus('idle');
-            setIsOnCall(false);
-        }
+        };
+
+        const clearSummary = () => setCallSummary(null);
+
+        return (
+            <CallContext.Provider value={{
+                device,
+                activeCall,
+                connectionStatus,
+                callStatus,
+                isReady,
+                isOnCall,
+                callDuration,
+                transcripts,
+                coachingData,
+                callSummary,
+                initDevice,
+                startCall,
+                hangup,
+                clearSummary
+            }}>
+                {children}
+            </CallContext.Provider>
+        );
     };
-
-    const hangup = () => {
-        if (activeCall) activeCall.disconnect();
-        else if (device) device.disconnectAll();
-        setCallStatus('idle');
-    };
-
-    const clearSummary = () => setCallSummary(null);
-
-    return (
-        <CallContext.Provider value={{
-            device,
-            activeCall,
-            connectionStatus,
-            callStatus,
-            isReady,
-            isOnCall,
-            callDuration,
-            transcripts,
-            coachingData,
-            callSummary,
-            initDevice,
-            startCall,
-            hangup,
-            clearSummary
-        }}>
-            {children}
-        </CallContext.Provider>
-    );
-};
