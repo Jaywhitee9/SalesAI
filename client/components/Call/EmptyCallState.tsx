@@ -1,25 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Phone, Delete, User, Briefcase, ChevronRight } from 'lucide-react';
-import { Lead } from '../../types';
+import React from 'react';
+import { Phone, Play, ChevronDown } from 'lucide-react';
+import { User } from '../../types';
 
 interface EmptyCallStateProps {
-    onStartCall: (number?: string) => void;
-    selectedLead?: Lead | null;
+    onStartCall: (phoneNumber?: string) => void;
+    selectedLead: User | null;
 }
 
 export const EmptyCallState: React.FC<EmptyCallStateProps> = ({ onStartCall, selectedLead }) => {
-    const [dialNumber, setDialNumber] = useState('');
-
-    // Pre-fill dialer when lead is selected
-    useEffect(() => {
-        if (selectedLead?.phone) {
-            setDialNumber(selectedLead.phone);
-        }
-    }, [selectedLead]);
-
-    const handleDigit = (digit: string) => {
-        setDialNumber(prev => prev + digit);
-    };
 
     const handleBackspace = () => {
         setDialNumber(prev => prev.slice(0, -1));
@@ -51,8 +39,8 @@ export const EmptyCallState: React.FC<EmptyCallStateProps> = ({ onStartCall, sel
                             </div>
                         </div>
                         <span className={`px-2 py-1 rounded-lg text-xs font-bold ${selectedLead.priority === 'Hot'
-                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                             }`}>
                             {selectedLead.score} נק׳
                         </span>

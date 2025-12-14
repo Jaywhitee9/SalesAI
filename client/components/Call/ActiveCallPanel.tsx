@@ -1,8 +1,29 @@
-
+```
 import React, { useState, useEffect, useRef } from 'react';
 import { Message, CoachSuggestion } from '../../types';
-import { Mic, PhoneOff, PauseCircle, Search, Sparkles, Send, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+    PhoneOff, 
+    Sparkles, 
+    Bot, 
+    Download,
+    FileText,
+    BrainCircuit,
+    CheckCircle2,
+    AlertTriangle,
+    Flag,
+    Activity,
+    Play
+} from 'lucide-react';
 import { Button } from '../Common/Button';
+
+// Mock Stages based on CALL_STAGES
+const STAGES = [
+    { id: 'opening', label: 'פתיחה', color: 'bg-emerald-500' },
+    { id: 'discovery', label: 'בירור צרכים', color: 'bg-brand-500' },
+    { id: 'value', label: 'הצעת ערך', color: 'bg-slate-300' }, // Future
+    { id: 'objections', label: 'התנגדויות', color: 'bg-slate-300' },
+    { id: 'closing', label: 'סגירה', color: 'bg-slate-300' }
+];
 
 interface ActiveCallPanelProps {
     transcript: Message[];
@@ -14,11 +35,6 @@ interface ActiveCallPanelProps {
 
 export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, coachSuggestions, onHangup, status = 'מקליט...', duration = '00:00' }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [autoScroll, setAutoScroll] = useState(true);
-
-    // Coach Chat State
-    const [isCoachChatOpen, setIsCoachChatOpen] = useState(false);
-    const [chatInput, setChatInput] = useState("");
     const [chatMessages, setChatMessages] = useState<{ id: string, sender: 'user' | 'ai', text: string }[]>([
         { id: 'welcome', sender: 'ai', text: 'אני כאן. מה תרצה שאבדוק עבורך תוך כדי השיחה?' }
     ]);
@@ -64,7 +80,7 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
             {/* Call Controls Header - Minimalist */}
             <div className="h-16 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-20 flex-shrink-0">
                 <div className="flex items-center gap-3">
-                    <div className={`flex items-center justify-center w-2 h-2 rounded-full ${status === 'connected' ? 'bg-rose-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                    <div className={`flex items - center justify - center w - 2 h - 2 rounded - full ${ status === 'connected' ? 'bg-rose-500 animate-pulse' : 'bg-slate-300' } `}></div>
                     <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">{duration} • {status === 'connected' ? 'מקליט...' : status}</span>
                 </div>
 
@@ -101,10 +117,10 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                         {transcript.map((msg) => (
                             <div
                                 key={msg.id}
-                                className={`flex flex-col ${msg.speaker === 'agent' ? 'items-end' : 'items-start'} max-w-3xl mx-auto w-full`}
+                                className={`flex flex - col ${ msg.speaker === 'agent' ? 'items-end' : 'items-start' } max - w - 3xl mx - auto w - full`}
                             >
                                 <div className="flex items-baseline gap-2 mb-1.5 px-1">
-                                    <span className={`text-xs font-bold uppercase tracking-wider ${msg.speaker === 'agent' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500'}`}>
+                                    <span className={`text - xs font - bold uppercase tracking - wider ${ msg.speaker === 'agent' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500' } `}>
                                         {msg.speaker === 'agent' ? 'אני (נציג)' : 'לקוח'}
                                     </span>
                                     <span className="text-[10px] text-slate-300 dark:text-slate-600 font-mono">
@@ -113,12 +129,14 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                                 </div>
 
                                 <div className={`
-                  relative max-w-[90%] md:max-w-[75%] px-6 py-4 rounded-2xl text-base leading-relaxed shadow-sm
-                  ${msg.speaker === 'agent'
-                                        ? 'bg-white border border-brand-100 dark:bg-slate-900 dark:border-brand-900/30 text-slate-800 dark:text-slate-200 rounded-tl-none'
-                                        : 'bg-white border border-slate-200 dark:bg-slate-800 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-tr-none'}
-                  ${msg.highlight ? 'ring-2 ring-amber-100 dark:ring-amber-900/30 bg-amber-50/50 dark:bg-amber-900/10' : ''}
-                `}>
+                  relative max - w - [90 %] md: max - w - [75 %] px - 6 py - 4 rounded - 2xl text - base leading - relaxed shadow - sm
+                  ${
+    msg.speaker === 'agent'
+    ? 'bg-white border border-brand-100 dark:bg-slate-900 dark:border-brand-900/30 text-slate-800 dark:text-slate-200 rounded-tl-none'
+    : 'bg-white border border-slate-200 dark:bg-slate-800 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-tr-none'
+}
+                  ${ msg.highlight ? 'ring-2 ring-amber-100 dark:ring-amber-900/30 bg-amber-50/50 dark:bg-amber-900/10' : '' }
+`}>
                                     {msg.text}
                                 </div>
                             </div>
@@ -154,11 +172,13 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                         {coachSuggestions.map((suggestion) => (
                             <div key={suggestion.id} className="flex gap-3 items-start animate-in slide-in-from-bottom-2 duration-300 group">
                                 <div className={`
-                    w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5
-                    ${suggestion.type === 'warning' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
-                                        suggestion.type === 'tip' ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400' :
-                                            'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}
-                  `}>
+w - 5 h - 5 rounded - md flex items - center justify - center flex - shrink - 0 mt - 0.5
+                    ${
+    suggestion.type === 'warning' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
+    suggestion.type === 'tip' ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400' :
+        'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+}
+`}>
                                     <Sparkles className="w-3 h-3" />
                                 </div>
                                 <div className="flex flex-col gap-1 max-w-2xl">
@@ -201,9 +221,9 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
 
             {/* NEW: Coach Chat Drawer (Bottom Sheet) */}
             <div
-                className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] transition-all duration-300 ease-in-out z-30 flex flex-col
-        ${isCoachChatOpen ? 'h-[50%] opacity-100' : 'h-0 opacity-0 pointer-events-none'}
-        `}
+                className={`absolute bottom - 0 left - 0 right - 0 bg - white dark: bg - slate - 900 border - t border - slate - 200 dark: border - slate - 800 shadow - [0_ - 10px_40px_rgba(0, 0, 0, 0.15)] transition - all duration - 300 ease -in -out z - 30 flex flex - col
+        ${ isCoachChatOpen ? 'h-[50%] opacity-100' : 'h-0 opacity-0 pointer-events-none' }
+`}
             >
                 {/* Drawer Header */}
                 <div className="flex items-center justify-between px-6 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm flex-shrink-0">
@@ -227,16 +247,17 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                 {/* Chat Messages Area */}
                 <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-white dark:bg-slate-900">
                     {chatMessages.map(msg => (
-                        <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
+                        <div key={msg.id} className={`flex ${ msg.sender === 'user' ? 'justify-start' : 'justify-end' } `}>
                             {/* 
                            RTL Logic:
                            justify-start = Right (User)
                            justify-end = Left (AI)
                         */}
-                            <div className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm relative animate-in zoom-in-95 duration-200 ${msg.sender === 'user'
-                                ? 'bg-purple-50 border border-purple-100 text-purple-900 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-100 rounded-br-none'
-                                : 'bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 rounded-bl-none flex items-start gap-3'
-                                }`}>
+                            <div className={`max - w - [80 %] p - 3.5 rounded - 2xl text - sm leading - relaxed shadow - sm relative animate -in zoom -in -95 duration - 200 ${
+    msg.sender === 'user'
+    ? 'bg-purple-50 border border-purple-100 text-purple-900 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-100 rounded-br-none'
+    : 'bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 rounded-bl-none flex items-start gap-3'
+} `}>
                                 {msg.sender === 'ai' && <Bot className="w-4 h-4 mt-0.5 text-purple-500 shrink-0" />}
                                 <span>{msg.text}</span>
                             </div>

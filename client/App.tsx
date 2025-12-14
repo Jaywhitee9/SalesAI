@@ -8,6 +8,7 @@ import { EmptyCallState } from './components/Call/EmptyCallState';
 import { InsightsPanel } from './components/Call/InsightsPanel';
 import { LeadsListSidebar } from './components/Leads/LeadsListSidebar'; // NEW
 import { InsightsPanelPlaceholder } from './components/Call/InsightsPanelPlaceholder'; // NEW
+import { KPISidebar } from './components/Call/KPISidebar'; // NEW
 import { CallSummaryModal } from './components/Call/CallSummaryModal'; // NEW
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { ManagerDashboard } from './components/Dashboard/ManagerDashboard';
@@ -214,36 +215,8 @@ function App() {
                     )}
                   </div>
 
-                  {/* RIGHT PANEL: Insights / Context */}
-                  <div className="w-80 flex flex-col">
-                    {(callStatus === 'dialing' || callStatus === 'connected' || callStatus === 'reconnecting') ? (
-                      <div className="flex-1 flex flex-col">
-                        {/* Helper wrapper to stack status + insights */}
-                        <CallStatusPanel
-                          stages={CALL_STAGES.map(s => ({
-                            ...s,
-                            status: coachingData.stageStatus?.[s.label] ||
-                              (s.label === coachingData.stage ? 'current' : 'upcoming')
-                          }))}
-                          lead={selectedPreCallLead || CURRENT_LEAD}
-                          duration={formatDuration(callDuration)}
-                          isDarkMode={isDarkMode}
-                          sentiment="neutral"
-                        />
-                        <div className="flex-1 border-t border-slate-200 dark:border-slate-800 overflow-hidden">
-                          <InsightsPanel
-                            insights={[
-                              { id: 'score', type: 'key_point', title: `ציון שיחה: ${coachingData.score}` },
-                              { id: 'insight', type: 'info', title: coachingData.insight },
-                              ...INITIAL_INSIGHTS
-                            ]}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <InsightsPanelPlaceholder />
-                    )}
-                  </div>
+                  {/* RIGHT PANEL: KPIs (My Performance) */}
+                  <KPISidebar />
 
                   {/* SUMMARY MODAL (Global for Call Context) */}
                   <CallSummaryModal
