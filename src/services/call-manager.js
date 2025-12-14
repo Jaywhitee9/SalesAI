@@ -1,3 +1,4 @@
+const EventEmitter = require('events');
 const CoachingEngine = require('./coaching-engine');
 const DBService = require('./db-service');
 
