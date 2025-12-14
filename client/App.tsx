@@ -192,15 +192,11 @@ function App() {
                   <div className="flex-1 flex flex-col min-w-0 border-x border-slate-200 dark:border-slate-800">
                     {(callStatus === 'dialing' || callStatus === 'connected' || callStatus === 'reconnecting') ? (
                       <ActiveCallPanel
-                        transcript={transcripts.length > 0 ? transcripts : MOCK_TRANSCRIPT}
-                        coachSuggestions={coachingData.suggestion ? [{
-                          id: Date.now().toString(),
-                          text: coachingData.suggestion,
-                          type: 'tip'
-                        }] : AI_COACH_MESSAGES}
+                        transcript={transcripts}
                         onHangup={hangup}
-                        status={callStatus === 'connected' ? 'connected' : 'מתקשר...'}
+                        status={callStatus === 'connected' ? 'connected' : 'connecting'}
                         duration={formatDuration(callDuration)}
+                        coachingData={coachingData}
                       />
                     ) : (
                       <EmptyCallState

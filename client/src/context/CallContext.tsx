@@ -8,8 +8,11 @@ interface CoachingData {
     stage: string;
     insight: string;
     suggestion?: string;
+    signals?: { type: 'pain' | 'interest' | 'objection' | 'positive', label: string }[];
     stageStatus?: { [key: string]: 'completed' | 'current' | 'upcoming' };
 }
+
+
 
 interface CallContextType {
     device: Device | null;
@@ -148,6 +151,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         stage: data.stage ?? prev.stage,
                         insight: data.message ?? prev.insight,
                         suggestion: data.suggested_reply,
+                        signals: data.signals || prev.signals || [],
                     }));
                 }
 

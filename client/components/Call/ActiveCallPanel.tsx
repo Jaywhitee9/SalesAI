@@ -26,13 +26,26 @@ const STAGES = [
 
 interface ActiveCallPanelProps {
     transcript: Message[];
-    coachSuggestions: CoachSuggestion[];
     onHangup?: () => void;
     status?: string;
     duration?: string;
+    coachingData: {
+        stage: string;
+        insight: string;
+        signals?: { type: string, label: string }[];
+    };
 }
 
-export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, coachSuggestions, onHangup, status = 'מקליט...', duration = '00:00' }) => {
+const mapStageToId = (stageName: string): string => {
+    if (stageName.includes('פתיחה') || stageName.includes('קשר אישי')) return 'opening';
+    if (stageName.includes('בירור') || stageName.includes('גילוי')) return 'discovery';
+    if (stageName.includes('הצגת') || stageName.includes('ערך') || stageName.includes('פתרון')) return 'value';
+    if (stageName.includes('התנגדויות')) return 'objections';
+    if (stageName.includes('סגירה')) return 'closing';
+    return 'opening';
+};
+
+export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, onHangup, status = 'מקליט...', duration = '00:00', coachingData }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [activeTab, setActiveTab] = useState<'transcript' | 'summary'>('transcript');
 
@@ -42,6 +55,8 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [transcript, activeTab]);
+
+    const currentStageId = mapStageToId(coachingData.stage);
 
     return (
         <div className="flex flex-col flex-1 bg-white dark:bg-slate-950 min-w-0 h-full relative overflow-hidden">
@@ -90,8 +105,10 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
 
                         <div className="flex justify-between items-start">
                             {STAGES.map((stage, idx) => {
-                                const isCurrent = idx === 1; // MOCK: "Discovery"
-                                const isCompleted = idx < 1;
+                                const isCurrent = stage.id === currentStageId;
+                                const currentIdx = STAGES.findIndex(s => s.id === currentStageId);
+                                const isCompleted = idx < currentIdx;
+
                                 return (
                                     <div key={stage.id} className="flex flex-col items-center gap-2">
                                         <div className={`
@@ -112,15 +129,15 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                     </div>
 
                     {/* Recommendation Card */}
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 border border-indigo-100 dark:border-indigo-800/50 shadow-sm relative overflow-hidden mb-6">
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 border border-indigo-100 dark:border-indigo-800/50 shadow-sm relative overflow-hidden mb-6 transition-all duration-500">
                         <div className="flex items-center gap-2 mb-3">
                             <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                             <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
                                 המלצה לזמן אמת
                             </span>
                         </div>
-                        <p className="text-slate-800 dark:text-slate-200 text-sm font-medium leading-relaxed relative z-10">
-                            "הלקוח הזכיר 'חוסר יעילות', שאל אותו: 'כמה זמן ביום מבזבז נציג ממוצע על אדמיניסטרציה?'"
+                        <p className="text-slate-800 dark:text-slate-200 text-sm font-medium leading-relaxed relative z-10 animate-in fade-in slide-in-from-bottom-2">
+                            "{coachingData.insight || 'מנתח שיחה...'}"
                         </p>
                         {/* Decorative background blob */}
                         <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-indigo-200/30 rounded-full blur-2xl"></div>
@@ -130,18 +147,22 @@ export const ActiveCallPanel: React.FC<ActiveCallPanelProps> = ({ transcript, co
                     <div>
                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">תובנות זוהו</h4>
                         <div className="flex flex-wrap gap-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 text-rose-700 dark:text-rose-400 text-xs font-bold">
-                                <AlertTriangle className="w-3 h-3" />
-                                כאב: תיעוד
-                            </span>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
-                                <Activity className="w-3 h-3" />
-                                עניין גבוה
-                            </span>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-xs font-medium">
-                                <Flag className="w-3 h-3" />
-                                תקציב: לא ידוע
-                            </span>
+                            {coachingData.signals && coachingData.signals.length > 0 ? (
+                                coachingData.signals.map((signal, idx) => (
+                                    <span key={idx} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-bold animate-in zoom-in-50
+                                        ${signal.type === 'pain' || signal.type === 'negative' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/30 text-rose-700 dark:text-rose-400' :
+                                            signal.type === 'interest' || signal.type === 'positive' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
+                                                'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'}
+                                    `}>
+                                        {signal.type === 'pain' ? <AlertTriangle className="w-3 h-3" /> :
+                                            signal.type === 'interest' ? <Activity className="w-3 h-3" /> :
+                                                <Flag className="w-3 h-3" />}
+                                        {signal.label}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="text-xs text-slate-400 italic">טרם זוהו תובנות...</span>
+                            )}
                         </div>
                     </div>
 
