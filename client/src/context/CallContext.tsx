@@ -192,46 +192,49 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsOnCall(false);
                 setCallStatus('idle');
                 setActiveCall(null);
+                // WS logic removed to allow summary to arrive
+            });
 
-                call.on('error', (err) => {
-                    console.error('Call Error', err);
-                    setCallStatus('idle');
-                    setIsOnCall(false);
-                });
-
-            } catch (err) {
-                console.error('Start Call Error', err);
+            call.on('error', (err) => {
+                console.error('Call Error', err);
                 setCallStatus('idle');
                 setIsOnCall(false);
-            }
-        };
+            });
 
-        const hangup = () => {
-            if (activeCall) activeCall.disconnect();
-            else if (device) device.disconnectAll();
+        } catch (err) {
+            console.error('Start Call Error', err);
             setCallStatus('idle');
-        };
+            setIsOnCall(false);
+        }
+    };
+};
 
-        const clearSummary = () => setCallSummary(null);
+const hangup = () => {
+    if (activeCall) activeCall.disconnect();
+    else if (device) device.disconnectAll();
+    setCallStatus('idle');
+};
 
-        return (
-            <CallContext.Provider value={{
-                device,
-                activeCall,
-                connectionStatus,
-                callStatus,
-                isReady,
-                isOnCall,
-                callDuration,
-                transcripts,
-                coachingData,
-                callSummary,
-                initDevice,
-                startCall,
-                hangup,
-                clearSummary
-            }}>
-                {children}
-            </CallContext.Provider>
-        );
+const clearSummary = () => setCallSummary(null);
+
+return (
+    <CallContext.Provider value={{
+        device,
+        activeCall,
+        connectionStatus,
+        callStatus,
+        isReady,
+        isOnCall,
+        callDuration,
+        transcripts,
+        coachingData,
+        callSummary,
+        initDevice,
+        startCall,
+        hangup,
+        clearSummary
+    }}>
+        {children}
+    </CallContext.Provider>
+);
     };
