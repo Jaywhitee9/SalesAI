@@ -52,7 +52,9 @@ function App() {
     connectionStatus,
     callStatus,
     hangup,
-    isOnCall
+    isOnCall,
+    callSummary,  // NEW
+    clearSummary  // NEW
   } = useCall();
 
   // Initialize Device on login/mount
