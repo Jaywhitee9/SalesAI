@@ -207,34 +207,34 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsOnCall(false);
         }
     };
-};
 
-const hangup = () => {
-    if (activeCall) activeCall.disconnect();
-    else if (device) device.disconnectAll();
-    setCallStatus('idle');
-};
 
-const clearSummary = () => setCallSummary(null);
-
-return (
-    <CallContext.Provider value={{
-        device,
-        activeCall,
-        connectionStatus,
-        callStatus,
-        isReady,
-        isOnCall,
-        callDuration,
-        transcripts,
-        coachingData,
-        callSummary,
-        initDevice,
-        startCall,
-        hangup,
-        clearSummary
-    }}>
-        {children}
-    </CallContext.Provider>
-);
+    const hangup = () => {
+        if (activeCall) activeCall.disconnect();
+        else if (device) device.disconnectAll();
+        setCallStatus('idle');
     };
+
+    const clearSummary = () => setCallSummary(null);
+
+    return (
+        <CallContext.Provider value={{
+            device,
+            activeCall,
+            connectionStatus,
+            callStatus,
+            isReady,
+            isOnCall,
+            callDuration,
+            transcripts,
+            coachingData,
+            callSummary,
+            initDevice,
+            startCall,
+            hangup,
+            clearSummary
+        }}>
+            {children}
+        </CallContext.Provider>
+    );
+};
