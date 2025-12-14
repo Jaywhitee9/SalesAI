@@ -66,7 +66,8 @@ Your tasks:
   "stage": "string",
   "score": number,
   "message": "string",
-  "suggested_reply": "string"
+  "suggested_reply": "string",
+  "signals": [{ "type": "pain" | "interest" | "objection" | "positive", "label": "string" }]
 }
 `;
 
