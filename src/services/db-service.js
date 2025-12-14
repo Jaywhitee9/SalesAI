@@ -1,86 +1,105 @@
-const fs = require('fs');
-const path = require('path');
-
-const DB_PATH = path.join(__dirname, '../../data');
-// Ensure DB directory exists
-if (!fs.existsSync(DB_PATH)) {
-    fs.mkdirSync(DB_PATH, { recursive: true });
-}
+const { supabase, getSystemUserId } = require('./supabase');
 
 class DBService {
-    constructor() {
-        this.collections = {
-            calls: path.join(DB_PATH, 'calls_db.json'),
-            leads: path.join(DB_PATH, 'leads_db.json')
-        };
-        this._initDB();
-    }
 
-    _initDB() {
-        Object.values(this.collections).forEach(filePath => {
-            if (!fs.existsSync(filePath)) {
-                fs.writeFileSync(filePath, JSON.stringify([], null, 2));
-            }
-        });
-    }
+    // --- CALLS ---
+    async saveCall(callData) {
+        const userId = await getSystemUserId();
 
-    _read(collection) {
         try {
-            const filePath = this.collections[collection];
-            if (!filePath) throw new Error(`Collection ${collection} not found`);
-            const data = fs.readFileSync(filePath, 'utf8');
-            return JSON.parse(data);
+            const { data, error } = await supabase
+                .from('calls')
+                .insert({
+                    agent_id: userId,
+                    direction: 'outbound', // Defaulting for now
+                    status: 'completed',
+                    duration: Math.floor((Date.now() - callData.startTime) / 1000),
+                    transcript: callData.transcripts,
+                    // If we had a lead_id, we would add it here
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Save Summary
+            if (callData.summary) {
+                await supabase.from('call_summaries').insert({
+                    call_id: data.id,
+                    summary_text: callData.summary.summary, // Adjust structure based on LLM output
+                    score: callData.summary.score,
+                    successful: callData.summary.success
+                });
+            }
+
+            console.log(`[Supabase] Saved call ${data.id}`);
+            return data;
         } catch (err) {
-            console.error(`[DB] Read Error (${collection}):`, err);
+            console.error('[Supabase] Save Call Error:', err);
+            return null;
+        }
+    }
+
+    async getRecentCalls(limit = 10) {
+        try {
+            const { data, error } = await supabase
+                .from('calls')
+                .select('*, call_summaries(*)')
+                .order('created_at', { ascending: false })
+                .limit(limit);
+
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error('[Supabase] Get Calls Error:', err);
             return [];
         }
     }
 
-    _write(collection, data) {
-        try {
-            const filePath = this.collections[collection];
-            if (!filePath) throw new Error(`Collection ${collection} not found`);
-            fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-        } catch (err) {
-            console.error(`[DB] Write Error (${collection}):`, err);
-        }
-    }
-
-    // --- CALLS ---
-    async saveCall(callData) {
-        const calls = this._read('calls');
-        const record = {
-            id: callData.callSid || Date.now().toString(),
-            timestamp: Date.now(),
-            agentId: callData.agentId,
-            customerNumber: callData.customerNumber || 'Unknown',
-            duration: Math.floor((Date.now() - callData.startTime) / 1000),
-            summary: callData.summary,
-            transcript: callData.transcripts,
-            score: callData.summary?.score || 0
-        };
-        calls.unshift(record);
-        this._write('calls', calls);
-        console.log(`[DB] Saved call record ${record.id}`);
-        return record;
-    }
-
-    async getRecentCalls(limit = 10) {
-        return this._read('calls').slice(0, limit);
-    }
-
     // --- LEADS ---
     async getLeads() {
-        return this._read('leads');
+        try {
+            const { data, error } = await supabase
+                .from('leads')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error('[Supabase] Get Leads Error:', err);
+            return [];
+        }
     }
 
     async seedLeads(initialLeads) {
-        const current = this._read('leads');
-        if (current.length === 0) {
-            this._write('leads', initialLeads);
+        const userId = await getSystemUserId();
+
+        // Transform leads to match Schema
+        const dbLeads = initialLeads.map(l => ({
+            owner_id: userId,
+            name: l.name,
+            company: l.company,
+            phone: l.phone,
+            email: l.email,
+            status: l.status,
+            priority: l.priority,
+            value: parseInt(l.value.replace(/[^0-9]/g, '')) || 0, // Cleanup currency string
+            tags: l.tags
+        }));
+
+        try {
+            const { data, error } = await supabase
+                .from('leads')
+                .insert(dbLeads)
+                .select();
+
+            if (error) throw error;
             return true;
+        } catch (err) {
+            console.error('[Supabase] Seed Error:', err);
+            return false;
         }
-        return false;
     }
 }
 
